@@ -6,13 +6,15 @@ sns.set_style('white')
 
 
 class KellyPrincipleBaseClass:
+
     
-    def __init__(self, p, bet_percentage, quote, sample=500):
+    def __init__(self, p, bet_percentage, quote, sample=1000):
 
         """
         :param p: float; probability of winning
         :param bet_amount: float; between 0 and 1 dollar; it correspond to the percentage of money bet
         :param sample: int; how many draws should be taken (T)
+        :param quote:
 
         """
 
@@ -20,15 +22,19 @@ class KellyPrincipleBaseClass:
         self.quote = quote + 1
         self.bet_percentage = bet_percentage
         self.sample = sample
-        self.draws = pd.Series(np.random.choice([0, self.quote], size=(self.sample), p=[1-self.p, self.p]))
+        np.random.seed(0)
+        self.draws = pd.Series(np.random.choice([0.5, self.quote], size=(self.sample), p=[1-self.p, self.p]))
 
-    def final_value_and_growth(self):
+    def final_value_and_growth_theoretical(self):
         initial_capital = 1
         final_capital = (1 + self.bet_percentage) ** (self.draws.values.tolist().count(self.quote)) * \
                         (1 - self.bet_percentage) ** (self.draws.values.tolist().count(0)) * initial_capital
 
         growth = np.log2(final_capital)/self.sample
         return final_capital, growth
+
+    def final_value_and_growth_practical(self, k):
+        return k.values[-1]**(1/len(k.index))-1
 
     def kelly_capital_evolution(self):
         capital = 1
@@ -44,29 +50,32 @@ class KellyPrincipleBaseClass:
 
 expected_value_dict = {}
 avg_growth_dict = {}
-bet_amount_range = np.arange(0.05, 1, 0.1)
-winning_prob = 0.8
-quote = 1
-theoretical_optimum = (winning_prob*(quote + 1) - 1) / quote
+bet_amount_range = np.arange(0.1, 1.05, 0.1)
+winning_prob = 0.5
+win_quote = 1
+
+theoretical_optimum = (winning_prob*(win_quote + 1) - 1) / win_quote
 capital_evolution_dict = {}
 
 for j in bet_amount_range:
     # j is the % of capital bet
     growth_dict = {}
     final_values_dict = {}
-    sample = KellyPrincipleBaseClass(winning_prob, j, quote)
+    sample = KellyPrincipleBaseClass(winning_prob, j, win_quote)
     capital_evolution = sample.kelly_capital_evolution()
     capital_evolution_dict[j] = capital_evolution
-    final_value, growth = sample.final_value_and_growth()
-    final_values_dict[j] = final_value
+    growth = sample.final_value_and_growth_practical(capital_evolution)
+    #final_values_dict[j] = final_value
     growth_dict[j] = growth
 
     final_values = pd.Series(final_values_dict)
     growth_s = pd.Series(growth_dict)
     avg_growth_dict[j] = growth_s.mean()
 
-pd.DataFrame(capital_evolution_dict).plot(logy=True, legend=True)
-plt.show()
+capital_evolution = pd.DataFrame(capital_evolution_dict)
+capital_evolution.columns = [round(i, 2) for i in capital_evolution.columns]
+capital_evolution.plot(logy=True)
+plt.savefig('demo2.png', transparent=True)
 
 ax = plt.subplot(1,1,1)
 avg_growth = pd.Series(avg_growth_dict)
