@@ -16,11 +16,11 @@ def why_divide_sample_variance_by_n_minus_one(min_sample_size, max_sample_size, 
 
         simulation = pd.DataFrame(np.random.randn(i, trials))
         mean = simulation.mean()
-        sample_std_dev_unbiased = simulation.std()  # Normalized by N-1 by default
-        sample_std_dev_biased = simulation.std(ddof=0)  # Normalized by N-1 by default
+        sample_std_dev_unbiased = simulation.std()  # Normalized by N - ddof by default
+        sample_std_dev_biased = simulation.std(ddof=0)  # Normalized by N - ddof by default
 
-        # sample_std_dev_biased = np.sqrt(simulation.apply(lambda x: ((x - x.mean())**2).sum() / i))
         mean_variance = mean.var()
+
         """MEAN VARIANCE: it is equal to sigma^2 / n (it will start at 0.5 with 2 sample size and 0.33 with 3 sample 
         size and so on...). The sample mean is an estimator of the population mean. It is strongly consistent 
         (therefore it is also weakly consistent) because its MSE tends to zero as the sample size gets larger."""
@@ -29,9 +29,14 @@ def why_divide_sample_variance_by_n_minus_one(min_sample_size, max_sample_size, 
         sample_std_dev.columns = ['Unbiased', 'Biased']
 
         if plot_sample_st_dev_hist:
-            """ When the sample size is so low, the standard deviation is skewed to the right, i.e. we are more likely 
+
+            """ 
+            
+            When the sample size is so low, the standard deviation is skewed to the right, i.e. we are more likely 
             to underestimate it; that's why the sample variance denominator should be n - 1, trying yo correct the 
-            bias"""
+            bias
+            
+            """
 
             fig = plt.figure()
             ax = fig.add_subplot(111)
@@ -40,6 +45,7 @@ def why_divide_sample_variance_by_n_minus_one(min_sample_size, max_sample_size, 
             ax.set_xlabel('Estimated standard deviation')
             ax.set_ylabel('frequency')
             ax.set_title('ESTIMATED STANDARD DEVIATION HISTOGRAM (sample: ' + str(i) + ')')
+            ax.legend(loc="lower right")
             plt.show()
             plt.close()
 
@@ -66,4 +72,4 @@ def why_divide_sample_variance_by_n_minus_one(min_sample_size, max_sample_size, 
     plt.show()
 
 
-why_divide_sample_variance_by_n_minus_one(2, 50, plot_sample_st_dev_hist=False)
+why_divide_sample_variance_by_n_minus_one(2, 100, plot_sample_st_dev_hist=False)
