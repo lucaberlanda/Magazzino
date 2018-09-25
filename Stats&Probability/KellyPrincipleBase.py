@@ -6,7 +6,6 @@ sns.set_style('white')
 
 
 class KellyPrincipleBaseClass:
-
     
     def __init__(self, p, bet_percentage, quote, sample=1000):
 
@@ -48,6 +47,7 @@ class KellyPrincipleBaseClass:
 
         return pd.Series(capital_evolution)
 
+
 expected_value_dict = {}
 avg_growth_dict = {}
 bet_amount_range = np.arange(0.1, 1.05, 0.1)
@@ -65,9 +65,7 @@ for j in bet_amount_range:
     capital_evolution = sample.kelly_capital_evolution()
     capital_evolution_dict[j] = capital_evolution
     growth = sample.final_value_and_growth_practical(capital_evolution)
-    #final_values_dict[j] = final_value
     growth_dict[j] = growth
-
     final_values = pd.Series(final_values_dict)
     growth_s = pd.Series(growth_dict)
     avg_growth_dict[j] = growth_s.mean()
@@ -76,11 +74,11 @@ capital_evolution = pd.DataFrame(capital_evolution_dict)
 capital_evolution.columns = [round(i, 2) for i in capital_evolution.columns]
 capital_evolution.plot(logy=True)
 plt.savefig('demo2.png', transparent=True)
+plt.close()
 
-ax = plt.subplot(1,1,1)
+ax = plt.subplot(1, 1, 1)
 avg_growth = pd.Series(avg_growth_dict)
 avg_growth.index = bet_amount_range
-print(avg_growth.index)
 ax.bar(avg_growth.index, avg_growth.values.tolist(), width=0.025, align='center')
 ax.set_xticks(avg_growth.index)
 ax.set_xlabel('Bet Amount', fontsize=15)
@@ -88,7 +86,7 @@ ax.set_ylabel('Capital Growth', fontsize=15)
 
 # place a text box in upper left in axes coords
 props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-textstr = 'winning probability: %.2f\ntheoretical optimum:%.2f'%(winning_prob, theoretical_optimum)
+textstr = 'winning probability: %.2f\ntheoretical optimum:%.2f' % (winning_prob, theoretical_optimum)
 ax.text(0.05, 0.05, textstr, transform=ax.transAxes, fontsize=12, verticalalignment='bottom', bbox=props)
 plt.tight_layout()
 plt.show()
