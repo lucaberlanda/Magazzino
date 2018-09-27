@@ -4,6 +4,14 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 sns.set_style('white')
 
+"""
+
+Surprised by the Gambler’s and Hot Hand Fallacies? A Truth in the Law of Small Numbers
+(http://www.thebigquestions.com/hothand2.pdf)
+by Joshua Miller
+
+"""
+
 # 1 is success
 # 0 is failure
 
