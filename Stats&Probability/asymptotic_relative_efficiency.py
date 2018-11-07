@@ -3,8 +3,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 """
+
+Replication of: Taleb, Silent Risk 
+[Mean Deviation vs Standard Deviation, Class Lecture Derivations]
+
 Asymptotic Relative Efficiency (ARE)
 ARE = with lim(N → inf) of (V(Std)/(E(Std)^2)) / (V(Mad)/E(Mad)^2)
+
 """
 
 ARC_list = []
