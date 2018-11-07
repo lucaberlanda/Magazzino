@@ -2,12 +2,20 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+"""
+Asymptotic Relative Efficiency (ARE)
+ARE = with lim(N → inf) of (V(Std)/(E(Std)^2)) / (V(Mad)/E(Mad)^2)
+"""
+
 ARC_list = []
+time_series_length = 10000
+time_series_number = 1000
+df = pd.DataFrame(np.random.randn(time_series_length, time_series_number))
 
-for i in range(100):
+for i in range(10, time_series_number):
 
-    df = pd.DataFrame(np.random.randn(1000, 100))
-    absolute_values = df.apply(lambda x: abs(x), axis=0)
+    flt_df = df.iloc[:, :i]  # at each iteration, increase the number of timeseries by one
+    absolute_values = flt_df.apply(lambda x: abs(x), axis=0)
 
     mean_deviation = absolute_values.mean()
     mean_deviation_exp_value_squared = np.square(mean_deviation.mean())
@@ -15,7 +23,7 @@ for i in range(100):
 
     ARC_denominator = mean_deviation_variance / mean_deviation_exp_value_squared
 
-    std_deviation = df.std()
+    std_deviation = flt_df.std()
     std_deviation_exp_value_squared = np.square(std_deviation.mean())
     std_deviation_variance = std_deviation.var()
 
