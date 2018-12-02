@@ -7,9 +7,14 @@ import seaborn as sns
 References:
 - Optimal Leverage From Non Ergodicity, Ole Peters [https://arxiv.org/pdf/0902.2965.pdf]
 
+- Insert theoretical prob
+ 
 """
 
 sns.set_style('white')
+save_figure = True
+mean_value = 0.1
+iterations = 1000
 
 
 def time_vs_ensemble_average(mean, st_dev, size):
@@ -24,9 +29,9 @@ def time_vs_ensemble_average(mean, st_dev, size):
 
 
 collection = {}
-for i in np.arange(0.01, 0.2, 0.0001):
+for i in np.arange(0.01, 0.4, 0.0001):
     time_and_ensemble_dict = {}
-    t_avg, e_avg = time_vs_ensemble_average(0.01, i, 1000)
+    t_avg, e_avg = time_vs_ensemble_average(mean_value, i, iterations)
     time_and_ensemble_dict['time'] = t_avg
     time_and_ensemble_dict['ensemble'] = e_avg
     collection[i] = time_and_ensemble_dict
@@ -36,9 +41,16 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 to_plot = pd.DataFrame(collection).T
 
-to_plot.loc[:, 'time'].plot(ax=ax, linewidth=0.5, c='red')
-to_plot.loc[:, 'ensemble'].plot(ax=ax, linewidth=0.5, c='black')
-to_plot.loc[:, 'time'].expanding().mean().plot(ax=ax, linewidth=3, c='red', legend=False)
-to_plot.loc[:, 'ensemble'].expanding().mean().plot(ax=ax, linewidth=3, c='black', legend=False)
+to_plot.loc[:, 'time'].plot(ax=ax, linewidth=0.5, c='red', alpha=0.5, legend=True)
+to_plot.loc[:, 'ensemble'].plot(ax=ax, linewidth=0.5, c='black', alpha=0.5, legend=True)
+to_plot.loc[:, 'time'].ffill().rolling(window=100).mean().plot(ax=ax, linewidth=3, c='red', legend=False)
+to_plot.loc[:, 'ensemble'].rolling(window=100).mean().plot(ax=ax, linewidth=3, c='black', legend=False)
+
+ax.set_xlabel('Volatility')
+ax.set_ylabel('Average')
+ax.set_title(r'Time vs Ensemble Average: $\mu=%s$, iterations=%s' % (str(mean_value), iterations))
+
+if save_figure:
+    plt.savefig('time_average_vs_ensemble_average.png', transparent=True)
 
 plt.show()
