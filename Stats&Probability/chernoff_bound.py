@@ -31,6 +31,7 @@ for i in n:
 
 plt.show()
 
+
 def chernoff_bounds(percentage_distance_from_mean, expected_value):
 
     # the first chernoff bound is for the percentage_distance_from_mean > 0
@@ -46,6 +47,7 @@ def chernoff_bounds(percentage_distance_from_mean, expected_value):
 
 # plot various chernoff bounds for various distance from mean __________________________________________________________
 
+
 dict_to_store = {}
 
 for i, j in zip(percentage_distance_from_mean_range, generic_range):
@@ -60,5 +62,3 @@ successes = pd.Series(np.random.binomial(trials, prob_of_success, samples))
 distance_from_exp_value = (successes - expected_value) / expected_value
 plt.hist(distance_from_exp_value, 50, facecolor='green', alpha=0.75)
 plt.show()
-
-quit()

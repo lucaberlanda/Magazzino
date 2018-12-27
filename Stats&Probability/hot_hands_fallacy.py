@@ -15,9 +15,9 @@ by Joshua Miller
 # 1 is success
 # 0 is failure
 
-sample_size = range(1, 100, 10)
+sample_size = range(4, 20, 1)
 streaks = 1
-probability = 0.5  # 0.5 like coin tossing
+probability = 0.75  # 0.5 like coin tossing
 
 success_rate_list = []
 success_rate_list_over_n = []
@@ -30,19 +30,19 @@ for j in sample_size:
         # sample = pd.Series([1, 1, 1])
 
         sample_roll = sample.rolling(window=streaks).sum()
-        picked_draws = pd.concat([sample.shift(-1), sample_roll], axis=1)
-        picked_draws.columns = ['outcome', 'cumulated_sum']
+        picked_draws = pd.concat([sample, sample.shift(-1), sample_roll], axis=1).dropna()
+        picked_draws.columns = ['outcome', 'outcome_lag', 'cumulated_sum']
+        #print(picked_draws)
         picked_draws = picked_draws[picked_draws.cumulated_sum >= streaks]
-        picked_draws = picked_draws.loc[:, 'outcome'].values.tolist()
+        picked_draws = picked_draws.loc[:, 'outcome_lag'].values.tolist()
 
         picked_draws = [x for x in picked_draws if not np.isnan(x)]
         success = [x for x in picked_draws if x == 1 and x != np.nan and not np.isnan(x)]
 
-        # print(picked_draws)
-        # print('---')
-
         try:
             success_rate = np.float64(len(success)) / np.float64(len(picked_draws))
+            #print('')
+            #print(success_rate)
         except ZeroDivisionError:
             success_rate = np.nan
 
