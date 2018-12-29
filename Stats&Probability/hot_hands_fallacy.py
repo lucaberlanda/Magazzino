@@ -5,13 +5,9 @@ import matplotlib.pyplot as plt
 sns.set_style('white')
 
 """
-
 Surprised by the Gambler’s and Hot Hand Fallacies? A Truth in the Law of Small Numbers
 (http://www.thebigquestions.com/hothand2.pdf)
 by Joshua Miller
-
-
-
 """
 
 # 1 is success
@@ -25,7 +21,7 @@ success_rate_list = []
 success_rate_list_over_n = []
 
 for j in sample_size:
-    for i in range(1000):
+    for i in range(10):
         sample = pd.Series(np.random.choice([0, 1], size=j))
         sample_roll = sample.rolling(window=streaks).sum()
         picked_draws = pd.concat([sample.shift(-1), sample_roll], axis=1)
@@ -46,11 +42,23 @@ for j in sample_size:
     print(sequence_length_mean)
     success_rate_list_over_n.append(sequence_length_mean)
 
-pd.Series(success_rate_list_over_n).plot()
+aa = pd.Series(success_rate_list_over_n).plot()
 
 plt.show()
 
-cur = conn_psycopg_research.cursor()
-cur.execute("AAA")
-conn_psycopg_research.commit()
-to_go.to_sql(table, conn_research, if_exists='append')
+from sqlalchemy import create_engine
+from psycopg2 import connect
+
+conn_psycopg = connect(
+    dbname='postgres',
+    host='localhost',
+    user='postgres',
+    password='pastulla1')
+
+conn = create_engine('postgres', echo=False).connect()
+
+# cur = conn_psycopg.cursor()
+# cur.execute("AAA")
+# conn_psycopg.commit()
+
+aa.to_sql('hot_hands_fallacy', conn, if_exists='append')
