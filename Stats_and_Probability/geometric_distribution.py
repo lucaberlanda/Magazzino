@@ -5,6 +5,7 @@ import seaborn as sns
 
 sns.set_style("whitegrid")
 
+
 def geometric_distribution(trials_number, binary_tranformation=False, min_periods=1):
 
     draws = pd.Series(np.random.geometric(0.2, trials_number))
@@ -32,4 +33,5 @@ def geometric_distribution(trials_number, binary_tranformation=False, min_period
 
     plt.show()
 
-geometric_distribution(10000)
+
+geometric_distribution(1000)
