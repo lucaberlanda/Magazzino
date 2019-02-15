@@ -1,14 +1,14 @@
+import random
+import pylab as pl
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
-import random
+import matplotlib.pyplot as plt
 
 sns.set_style("whitegrid")
 
 
-def cauchy_simulation(trials_number, binary_tranformation=False, min_periods=1):
+def cauchy_simulation(trials_number, binary_transformation=False, min_periods=1):
 
     cauchy = pd.Series(np.random.standard_cauchy(trials_number))
     cauchy_expanding_mean = pd.expanding_mean(cauchy, min_periods).dropna()
@@ -28,7 +28,7 @@ def cauchy_simulation(trials_number, binary_tranformation=False, min_periods=1):
     cauchy_expanding_stdev.plot()
     plt.show()
 
-    if binary_tranformation:
+    if binary_transformation:
         cauchy_to_binary = cauchy.apply(lambda x: 1 if x > 0 else 0)
         cauchy_to_binary_expanding_mean = pd.expanding_mean(cauchy_to_binary, min_periods)
         cauchy_to_binary_expanding_mean.plot()
@@ -70,7 +70,7 @@ def bool_based_on_prob(probability):
     return random.random() < probability
 
 
-def mixture_of_gaussian(p = 1/2000, alpha = 1950, mean=0, vol=0.1, number_of_draws=1000, plot=True):
+def mixture_of_gaussian(p=1/2000, alpha=1950, mean=0, vol=0.1, number_of_draws=1000, plot=True):
 
     beta = gaussian_scaling_factor(alpha, p)
 
@@ -105,5 +105,53 @@ def mixture_of_gaussian(p = 1/2000, alpha = 1950, mean=0, vol=0.1, number_of_dra
 
     return returns_series
 
-mixture_of_gaussian()
-cauchy_simulation(1000, binary_tranformation=True)
+
+def gaussian_kernel(mu_list=[0], sigma_list=[1]):
+
+    fig = pl.figure(figsize=(12, 9))
+    ax1 = plt.subplot2grid((1, 1), (0, 0), rowspan=1)
+
+    x = np.linspace(min(mu_list) - max(sigma_list) * 4,
+                    max(mu_list) + max(sigma_list) * 4,
+                    5000)
+
+    ax1.set_title('Gaussian Distributions', size=30)
+    legend_strings = []
+
+    for mu, sigma in zip(mu_list, sigma_list):
+        distr = pd.Series((1 / (np.sqrt(2 * np.pi * np.power(sigma, 2)))) *
+                          (np.power(np.e, -(np.power((x - mu), 2) / (2 * np.power(sigma, 2))))))
+
+        distr.index = x
+        legend_str = 'mu = %s, sigma = %s' % (str(mu), str(sigma))
+        legend_strings.append(legend_str)
+        distr.plot(ax=ax1, legend=legend_str)
+
+    ax1.legend(legend_strings, prop={'size': 15})
+    return ax1
+
+
+def exponential_kernel(scale=[0]):
+
+    ax1 = plt.subplot2grid((1, 1), (0, 0), rowspan=1)
+    x = np.linspace(0, 5, 5000)
+
+    ax1.set_title('Exponential Distributions', size=15)
+    legend_strings = []
+
+    for mu in scale:
+        distr = pd.Series(mu * np.power(np.e, -(mu * x)))
+        distr.index = x
+        legend_str = 'mu = %s' % str(mu)
+        legend_strings.append(legend_str)
+        distr.plot(ax=ax1, legend=legend_str)
+
+    ax1.legend(legend_strings, prop={'size': 15})
+    return ax1
+
+
+gaussian_plot = exponential_kernel(scale=[0.5, 1, 2, 3])
+plt.savefig('demo.png', transparent=True)
+
+
+

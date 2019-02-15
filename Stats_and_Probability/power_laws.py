@@ -1,8 +1,28 @@
+from scipy import stats
+
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
-import sklearn as skl
+import matplotlib.pyplot as plt
+
+kernels = {}
+for sc in range(1, 5):
+    kernels[sc] = pd.Series(stats.pareto.pdf(np.arange(1, 3, 0.01), b=sc))
+
+pd.DataFrame(kernels).plot()
+plt.show()
+
+stats.pareto.pdf()
+to_plot = {}
+for i in range(1, 5):  # shape and mode
+    np.random.seed(0)
+    ts = pd.Series(np.random.pareto(i, 10000))
+    ts_avg = ts.expanding().mean()
+    to_plot[i] = ts_avg
+
+pd.DataFrame(to_plot).plot(logy=True)
+plt.show()
+quit()
 
 
 class TailRisk:
@@ -183,7 +203,9 @@ def compute_stuff(i):
     TailRisk.ME_plot(data.cleaned_series)
     TailRisk.log_log_plot_with_threshold(data.cleaned_series)
 
+
 hills_dict = {}
+
 for i in range(1000):
     # Pareto distribution
     a = 4  # shape and mode
