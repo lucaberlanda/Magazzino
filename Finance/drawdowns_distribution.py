@@ -10,6 +10,7 @@ def plot_drawdown(dist):
     dist.columns = ['index', 'rets']
     dist['days_passed'] = (dist['index'] - dist['index'].shift()).shift(-1)
 
+
     dd_groups_list = []
     m = 0
     for i in dist.index:
@@ -27,9 +28,21 @@ def plot_drawdown(dist):
         dd_dict[counter] = drawdown
 
     dd_distrib_to_plot = pd.Series(dd_dict).sort_values().reset_index().drop('index', axis=1).reset_index()
-    dd_distrib_to_plot['index'] = dd_distrib_to_plot.loc[:, 'index'] + 1
-    dd_distrib_to_plot.columns = ['frequency', 'drawdown']
-    dd_distrib_to_plot.plot('drawdown', 'frequency', kind='scatter', logy=True, s=50, alpha=0.5)
+
+    dd_mean = dd_distrib_to_plot.loc[:, 0].mean()
+
+    dd_distrib_to_plot['theoretical_frequency'] = pd.Series(
+        (dd_mean * np.power(np.e, (dd_mean * np.arange(len(dd_distrib_to_plot.index))))))
+
+    dd_distrib_to_plot['index'] = (dd_distrib_to_plot.loc[:, 'index'] / max(dd_distrib_to_plot.index)).iloc[1:]
+    dd_distrib_to_plot.columns = ['frequency', 'drawdown', 'theoretical_frequency']
+
+    # dd_distrib_to_plot['index'] = dd_distrib_to_plot.loc[:, 'index'] + 1
+    # dd_distrib_to_plot.columns = ['frequency', 'drawdown']
+
+    ax = plt.subplot(111)
+    dd_distrib_to_plot.plot('drawdown', 'frequency', kind='scatter', logy=True, s=50, alpha=0.5, ax=ax)
+    dd_distrib_to_plot.plot('drawdown', 'theoretical_frequency', kind='scatter', logy=True, s=100, alpha=0.5, ax=ax)
     plt.show()
 
 
@@ -40,4 +53,5 @@ ndq_rets = ndq.pct_change().dropna()
 ndq_rets2 = pd.Series(ndq_rets.values, index=ndq_rets.index)
 # aaa = pd.Series(np.random.pareto(1, size=n)).pct_change()
 plot_drawdown(ndq_rets2)
+
 
