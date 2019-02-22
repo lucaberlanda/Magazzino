@@ -150,7 +150,7 @@ def exponential_kernel(scale=[0]):
     return ax1
 
 
-gaussian_plot = exponential_kernel(scale=[0.5, 1, 2, 3])
+gaussian_plot = exponential_kernel(scale=[1/0.01, 1/0.02, 1/0.03])
 plt.savefig('demo.png', transparent=True)
 
 

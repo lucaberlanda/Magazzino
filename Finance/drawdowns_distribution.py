@@ -28,21 +28,24 @@ def plot_drawdown(dist):
         dd_dict[counter] = drawdown
 
     dd_distrib_to_plot = pd.Series(dd_dict).sort_values().reset_index().drop('index', axis=1).reset_index()
-
+    dd_distrib_to_plot.loc[:, 0] = dd_distrib_to_plot.loc[:, 0] * (-1)
     dd_mean = dd_distrib_to_plot.loc[:, 0].mean()
 
-    dd_distrib_to_plot['theoretical_frequency'] = pd.Series(
-        (dd_mean * np.power(np.e, (dd_mean * np.arange(len(dd_distrib_to_plot.index))))))
+    dd_distrib_to_plot['theoretical_frequency'] = pd.Series\
+        (1 - np.power(np.e, ((-1/dd_mean) * dd_distrib_to_plot.loc[:, 0])))
 
     dd_distrib_to_plot['index'] = (dd_distrib_to_plot.loc[:, 'index'] / max(dd_distrib_to_plot.index)).iloc[1:]
     dd_distrib_to_plot.columns = ['frequency', 'drawdown', 'theoretical_frequency']
+    dd_distrib_to_plot['theoretical_frequency'] = 1 - dd_distrib_to_plot['theoretical_frequency']
 
-    # dd_distrib_to_plot['index'] = dd_distrib_to_plot.loc[:, 'index'] + 1
-    # dd_distrib_to_plot.columns = ['frequency', 'drawdown']
-
+    # PLOT
     ax = plt.subplot(111)
-    dd_distrib_to_plot.plot('drawdown', 'frequency', kind='scatter', logy=True, s=50, alpha=0.5, ax=ax)
-    dd_distrib_to_plot.plot('drawdown', 'theoretical_frequency', kind='scatter', logy=True, s=100, alpha=0.5, ax=ax)
+    dd_distrib_to_plot.plot('drawdown', 'frequency', kind='scatter',
+                            logy=True, s=30, alpha=1, ax=ax, marker='x', c='black')
+
+    plt.plot(dd_distrib_to_plot.loc[:, 'drawdown'],
+             dd_distrib_to_plot.loc[:, 'theoretical_frequency'], c='red')
+
     plt.show()
 
 
