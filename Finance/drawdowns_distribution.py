@@ -10,7 +10,6 @@ def plot_drawdown(dist):
     dist.columns = ['index', 'rets']
     dist['days_passed'] = (dist['index'] - dist['index'].shift()).shift(-1)
 
-
     dd_groups_list = []
     m = 0
     for i in dist.index:
@@ -28,23 +27,36 @@ def plot_drawdown(dist):
         dd_dict[counter] = drawdown
 
     dd_distrib_to_plot = pd.Series(dd_dict).sort_values().reset_index().drop('index', axis=1).reset_index()
-    dd_distrib_to_plot.loc[:, 0] = dd_distrib_to_plot.loc[:, 0] * (-1)
-    dd_mean = dd_distrib_to_plot.loc[:, 0].mean()
+    dd_distrib_to_plot.columns = ['rank_order', 'drawdown']
+    dd_distrib_to_plot.sort_values('rank_order', ascending=False)
 
+    ax = plt.subplot(121)
+    ax.set_xlim(max(dd_distrib_to_plot['rank_order']))
+    ax.invert_yaxis()
+    ax.invert_xaxis()
+
+    dd_distrib_to_plot.plot('rank_order', 'drawdown', kind='scatter', s=20,
+                            alpha=1, logx=True, ax=ax, marker='x', c='black')
+
+    dd_distrib_to_plot.loc[:, 'drawdown'] = dd_distrib_to_plot.loc[:, 'drawdown'] * (-1)
+    dd_mean = dd_distrib_to_plot.loc[:, 'drawdown'].mean()
     dd_distrib_to_plot['theoretical_frequency'] = pd.Series\
-        (1 - np.power(np.e, ((-1/dd_mean) * dd_distrib_to_plot.loc[:, 0])))
+        (1 - np.power(np.e, ((-1/dd_mean) * dd_distrib_to_plot.loc[:, 'drawdown'])))
 
-    dd_distrib_to_plot['index'] = (dd_distrib_to_plot.loc[:, 'index'] / max(dd_distrib_to_plot.index)).iloc[1:]
+    dd_distrib_to_plot['rank_order'] = (dd_distrib_to_plot.loc[:, 'rank_order'] / max(dd_distrib_to_plot.index))
     dd_distrib_to_plot.columns = ['frequency', 'drawdown', 'theoretical_frequency']
     dd_distrib_to_plot['theoretical_frequency'] = 1 - dd_distrib_to_plot['theoretical_frequency']
 
     # PLOT
-    ax = plt.subplot(111)
-    dd_distrib_to_plot.plot('drawdown', 'frequency', kind='scatter',
-                            logy=True, s=30, alpha=1, ax=ax, marker='x', c='black')
+    ax2 = plt.subplot(122)
+    dd_distrib_to_plot.plot('frequency', 'drawdown', kind='scatter',
+                            logx=True, s=30, alpha=1, ax=ax2, marker='x', c='black')
 
-    plt.plot(dd_distrib_to_plot.loc[:, 'drawdown'],
-             dd_distrib_to_plot.loc[:, 'theoretical_frequency'], c='red')
+    plt.plot(dd_distrib_to_plot.loc[:, 'theoretical_frequency'],
+             dd_distrib_to_plot.loc[:, 'drawdown'], c='red')
+
+    # ax.invert_yaxis()
+    # ax.invert_xaxis()
 
     plt.show()
 
@@ -52,6 +64,7 @@ def plot_drawdown(dist):
 n = 1000
 ndq = pd.Series(np.random.normal(0, 0.01, n))
 ndq = quandl.get("NASDAQOMX/COMP-NASDAQ", trim_start='1990-03-01', trim_end='2018-04-03').loc[:, 'Index Value']
+print(ndq.head())
 ndq_rets = ndq.pct_change().dropna()
 ndq_rets2 = pd.Series(ndq_rets.values, index=ndq_rets.index)
 # aaa = pd.Series(np.random.pareto(1, size=n)).pct_change()
