@@ -8,6 +8,21 @@ import matplotlib.pyplot as plt
 sns.set_style("whitegrid")
 
 
+def quiz_max_s_k(k=2, mean=10, s=10000, ):
+    contract_value_vs_vol = {}
+    for i in np.arange(0.1, 10, 0.05):
+        mu = np.log(mean) - ((i**2)/2)  # deduce mu parameter form the mean, to keep it constant
+        simulation = pd.Series(np.random.lognormal(mu, i, s))
+        K_series = pd.Series(k, simulation.index)
+        K_and_S = pd.concat([simulation, K_series], axis=1)
+        contract_value = K_and_S.max(axis=1).mean()
+        contract_value_vs_vol[i] = contract_value
+        print('Contract Value with %s vol: %s' % (str(round(i, 2)), str(round(contract_value, 2))))
+
+    pd.Series(contract_value_vs_vol).plot()
+    plt.show()
+
+
 def cauchy_simulation(trials_number, binary_transformation=False, min_periods=1):
 
     cauchy = pd.Series(np.random.standard_cauchy(trials_number))
