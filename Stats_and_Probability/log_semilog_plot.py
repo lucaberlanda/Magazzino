@@ -13,10 +13,6 @@ ax.scatter(xs, ys, alpha=0.5, c='black')
 ax.set_yscale('log')
 ax.set_xscale("log")
 plt.show()
-
-quit()
-
-
 ys.plot()
 plt.show()
 
