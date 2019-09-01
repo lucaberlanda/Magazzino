@@ -5,33 +5,117 @@ import seaborn as sns
 
 sns.set_style("whitegrid")
 simple_case = False
-n = 1000
 
-if simple_case:
-    a = pd.Series(range(0, n))
-    b = a.apply(lambda x: 1 if x > n/2 else 0)
-    c = b * a
 
-    plt.scatter(a, b)
+def dividing_a_stick():
+
+    trials_dict = {}
+    for i in range(200000):
+        single_trial = {}
+        x = np.random.uniform(0, 1)
+        y = np.random.uniform(0, x)
+        single_trial['x'] = x
+        single_trial['y'] = y
+        trials_dict[i] = single_trial
+
+    trials = pd.DataFrame(trials_dict).T
+    cond_on_y = trials[(trials.y > 0.8) & (trials.y < 0.9)]
+    cond_on_y.hist(column='x', bins=40)
     plt.show()
-    plt.scatter(a, c)
+
+
+def graph1():
+    n_sample = 20
+    max_n_variables = 1000
+    corr_threshold = 0.5
+    corr_dict = {}
+
+    for n in np.arange(2, max_n_variables):
+        rvs = pd.DataFrame(np.random.randn(n_sample, n))
+        corrs = abs(rvs.corr())
+        n_spurious = (corrs > corr_threshold).sum().sum() - n
+        print(n, n_spurious)
+        corr_dict[n] = n_spurious
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.xlabel('number of variables', fontsize=12)
+    plt.ylabel('number of spurious correlations', fontsize=12)
+    pd.Series(corr_dict).rolling(window=10).mean().plot(ax=ax)
     plt.show()
-    print(a.corr(b))
-    print(a.corr(c))
-    quit()
 
-aa = pd.DataFrame(np.random.randn(n, 2))
-bb = pd.Series(np.random.choice([0, 1], n))
-cc = pd.concat([aa, bb], axis=1)
-cc.columns = ['serie1', 'serie2', 'dummy']
 
-ee = pd.concat([cc.loc[:, 'serie1'], pd.concat([cc[cc.serie1 < 0].loc[:, 'serie1'],
-                                                cc[cc.serie1 >= 0].loc[:, 'serie2']])], axis=1)
+def graph2():
+    data = [100, 101, 102.5, 103, 104, 103.2, 106, 107, 106.3, 106.2, 108, 108.5, 108.7, 110, 113.5]
+    fig = plt.figure(figsize=(8, 5))
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212)
 
-ee.plot.scatter('serie1', 0)
-print(ee.expanding.corr())
+    pd.Series(data).plot(ax=ax1, style='o-', linewidth=1.5, c='black')
+    pd.Series(data).plot(ax=ax2, style='o-', linewidth=1.5, c='black')
+    ax2.set_ylim(0, 130)
 
-plt.show()
-dd = pd.concat([cc[cc.dummy == 0].loc[:, 'serie2'], cc[cc.dummy == 1].loc[:, 'serie1']])
-correlation = pd.concat([dd, cc.loc[:, 'serie1']], axis =1).corr()  # corr of two variables correlated 1/2 of the times
-print(correlation)
+    ax1.set_ylabel('value')
+    ax2.set_ylabel('value')
+
+    ax1.set_xlabel('day')
+    ax2.set_xlabel('day')
+
+    ax1.set_title('Rescaled Y Axis')
+    ax2.set_title('Not Rescaled Y Axis')
+
+    plt.tight_layout()
+    plt.show()
+
+
+def graph3():
+    data1 = [100, 101, 105, 103, 102.5, 101, 106, 105, 104.3, 102, 101.6, 103, 106, 102]
+    data2 = [200, 223, 198, 188, 100, 101, 105, 103, 102.5, 101, 106, 105, 104.3, 102, 101.6, 103, 106, 102]
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212)
+
+    pd.Series(data2).plot(ax=ax1)
+    pd.Series(data1).iloc[4:].plot(ax=ax2)
+
+    ax1.set_ylabel('value')
+    ax2.set_ylabel('value')
+
+    ax1.set_xlabel('day')
+    ax2.set_xlabel('day')
+
+    plt.show()
+
+
+def graph4():
+
+    ts = pd.read_excel('article_graph.xlsx')
+    data1 = ts.loc[:, 'series_1'].rolling(window=3).mean()
+    data2 = ts.loc[:, 'series_2'].rolling(window=3).mean()
+
+    fig = plt.figure(figsize=(8, 5))
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212)
+    ax3 = ax2.twinx()
+
+    pd.Series(data1).plot(ax=ax1, style='o-', linewidth=1.5, c='black')
+    pd.Series(data2).plot(ax=ax1, style='o-', linewidth=1.5, c='red')
+
+    pd.Series(data1).plot(ax=ax2, style='o-', linewidth=1.5, c='black', logy=True)
+    pd.Series(data2).plot(ax=ax3, style='o-', linewidth=1.5, c='red', label='cos(x)')
+
+    ax1.set_ylabel('value')
+    ax2.set_ylabel('value in logarithmic scale')
+    ax3.set_ylabel('value on secondary axis')
+
+    ax1.set_xlabel('day')
+    ax2.set_xlabel('day')
+    ax1.set_title('Original Values')
+    ax2.set_title('Rescaled Values')
+
+    plt.tight_layout()
+    plt.show()
+
+
+dividing_a_stick()
