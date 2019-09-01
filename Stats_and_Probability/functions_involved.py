@@ -9,7 +9,7 @@ from scipy.stats import norm
 import numpy as np
 
 
-def brownian(x0, n, dt, delta, out=None):
+def brownian(x0, n, dt, delta, out=None, seed=False):
     """
     Generate an instance of Brownian motion (i.e. the Wiener process):
 
@@ -58,6 +58,8 @@ def brownian(x0, n, dt, delta, out=None):
 
     Note that the initial value `x0` is not included in the returned array.
     """
+    if seed:
+        np.random.seed(0)
 
     x0 = np.asarray(x0)
 
