@@ -6,6 +6,37 @@ import seaborn as sns
 sns.set_style("whitegrid")
 simple_case = False
 
+n = 100
+est = []
+sigma = 2
+for i in range(1000):
+    est.append((pd.Series(np.random.normal(0, sigma, n))**2).mean())
+
+print(pd.Series(est).var(), (2*sigma**4)/n)
+
+n = 10
+est = []
+sigma = 2
+for i in range(1000):
+    aa = pd.Series(np.random.normal(0, sigma, n))
+    est.append(((aa- aa.mean())**2).mean())
+
+print(pd.Series(est).var(), (2*sigma**4)/(n+1))
+
+choices_xx = []
+for n in range(1, 10):
+    choices_n = []
+    for _ in range(10000):
+        probs = [1 - (1 / (n ** 2)), 1 / (n ** 2)]
+        choice = np.random.choice([1 / n, n], 1, replace=False, p=probs)[0]
+        choices_n.append(choice)
+
+    choices_xx.append(pd.Series(choices_n).var())
+
+pd.Series(choices_xx).plot()
+plt.show()
+quit()
+
 
 def dividing_a_stick():
 

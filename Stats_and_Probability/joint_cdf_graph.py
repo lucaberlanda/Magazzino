@@ -9,6 +9,27 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # This import registers the 3D projection, but is otherwise unused.
 
+t = []
+q = []
+sample = np.random.uniform(0, 1, 100000)
+for i in sample:
+    t.append(np.random.geometric(i))
+    q.append(i)
+
+outcomes = pd.DataFrame([t, q]).T
+outcomes.columns = ['t', 'q']
+lines = []
+for i in range(1, 50):
+    aa = outcomes[outcomes.t == i].mean().q
+    lines.append(aa)
+
+pd.Series(lines, index=range(1, 50)).plot()
+plt.show()
+quit()
+
+
+
+
 def create_3d_graph(x, y):
     import matplotlib.pyplot as plt
     import numpy as np
@@ -105,6 +126,7 @@ def x_var():
     return x
 
 
+
 def y_var(x):
     if x < 2:
         y = np.random.uniform(1, 4)
@@ -126,9 +148,8 @@ ax1 = fig.add_subplot(211)
 ax2 = fig.add_subplot(212)
 pd.Series(xs).hist(ax=ax2, bins=50)
 pd.Series(ys).hist(ax=ax1, bins=50)
-plt.show()
-
 create_3d_graph(xs, ys)
+plt.show()
 
 quit()
 aa = pd.DataFrame([xs, ys]).T
