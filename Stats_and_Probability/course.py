@@ -4,7 +4,69 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as sc
 
+import pandas as pd
+import numpy as np
+from pandas.stats.api import ols
+import statsmodels.api as sm
+import statsmodels.api as sm
 
+X = pd.DataFrame([[1, 1, 1],[1, 2, 4],[1, 3, 9],[1, 4, 16],[1, 5, 25],
+                  [1, 6, 36],[1, 7, 49],[1, 8, 64], [1, 9, 81], [1, 10, 100]])
+
+y = [1, 3, 5, 8, 11, 14, 18, 21, 25, 28]
+
+model = sm.OLS(y, X)
+results = model.fit()
+print(results.summary())
+X = pd.DataFrame([[1, 1, 1],[1, 2, 4],[1, 3, 9],[1, 4, 16],[1, 5, 25],
+                  [1, 6, 36],[1, 7, 49],[1, 8, 64], [1, 9, 81], [1, 10, 100]])
+print(X.T.dot(X))
+
+a = pd.Series(np.random.uniform(0, 1, 100)).sort_values().reset_index().drop('index', axis=1).reset_index()
+a.columns = ['theoretical', 'real']
+a.theoretical = a.theoretical + 1
+a.theoretical = a.theoretical/len(a.index)
+a.plot.scatter('theoretical', 'real')
+plt.show()
+
+a = [0.01,
+0.1,
+0.2,
+0.28,
+0.8]
+
+a = pd.Series([0.01,
+0.1,
+0.2,
+0.28,
+0.8]).sort_values().reset_index().drop('index', axis=1).reset_index()
+a.columns = ['theoretical', 'real']
+a.theoretical = a.theoretical + 1
+a.theoretical = a.theoretical/len(a.index)
+a.plot.scatter('theoretical', 'real')
+plt.show()
+# Cochran's Theorem
+
+n = 3
+dof = n - 1
+trials = 10000
+sigma = 2
+
+normalized_Sn = []
+for _ in range(trials):
+    s = pd.Series(np.random.normal(0, 2, n))
+    Sn = ((s**2).mean() - (s.mean()**2))
+    normalized_Sn.append(Sn*n/(sigma**2))
+
+fig = plt.figure(facecolor='white')
+ax = fig.add_subplot(111)
+
+theoretical_dist = pd.Series(np.random.chisquare(dof, trials))
+theory_and_practice = pd.concat([pd.Series(normalized_Sn), theoretical_dist], axis=1)
+theory_and_practice.plot(kind='hist', ax=ax, bins=100, alpha=0.5)
+ax.legend(['Normalized sample variance with %s samples' %str(n), 'Chi Squared with %s degree of freedom' %str(dof)])
+plt.show()
+quit()
 l = []
 n2 = 10000
 
