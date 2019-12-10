@@ -4,6 +4,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as sc
 
+# Cochrane
+res_dict = {}
+for i in range(1000):
+    a = pd.Series(np.random.normal(0, 1, 100))
+    res_dict[i] = [a.mean(), a.std()]
+
+pd.DataFrame(res_dict).T.plot(x=0, y=1, kind='scatter')
+plt.show()
+
 import pandas as pd
 import numpy as np
 from pandas.stats.api import ols
