@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 import matplotlib.pyplot as plt
-import CoreFunctions.functions_involved as finv
 import seaborn as sns
 import statsmodels as sm
 
