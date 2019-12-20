@@ -1,8 +1,7 @@
 .idea
 
-ff.py
-ff2.py
-password.py
+pwds.py
+pwds.py__pycache__
 password.py__pycache__
 __pycache__/
  

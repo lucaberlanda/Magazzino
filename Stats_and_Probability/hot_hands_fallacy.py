@@ -59,9 +59,4 @@ conn_psycopg = connect(
     password='pastulla1')
 
 conn = create_engine('postgres', echo=False).connect()
-
-# cur = conn_psycopg.cursor()
-# cur.execute("AAA")
-# conn_psycopg.commit()
-
 aa.to_sql('hot_hands_fallacy', conn, if_exists='append')
