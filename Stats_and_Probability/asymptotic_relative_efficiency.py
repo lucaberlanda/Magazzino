@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from dirs import STORE_DIR, join
+
 """
 Replication of: Taleb, Silent Risk 
 [Mean Deviation vs Standard Deviation, Class Lecture Derivations]
@@ -14,7 +16,6 @@ ARC_list = []
 time_series_length = 100
 time_series_number = 200
 df = pd.DataFrame(np.random.randn(time_series_length, time_series_number))
-print(df)
 
 for i in range(10, time_series_number):
     flt_df = df.iloc[:, :i]  # at each iteration, increase the number of timeseries by one
@@ -39,5 +40,4 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 ARC_series = pd.Series(ARC_list)
 ARC_series.plot(ax=ax)
-
-plt.savefig()
+plt.savefig(join(STORE_DIR, 'asymptotic_relative_efficiency.png'), transparent=True)
