@@ -1,10 +1,12 @@
 import numpy as np
 import collections
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 
 df_raw = pd.read_excel('futuro_applications_dataset.xlsx', sheet_name='dataset')
@@ -62,9 +64,15 @@ features = df_answered.loc[:, relevant_columns]
 features = features.fillna(features.median())
 
 X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.4)
-clf = RandomForestClassifier(n_estimators=500, max_depth=5)
+# clf = RandomForestClassifier(n_estimators=500, max_depth=5)
+clf = GradientBoostingClassifier(n_estimators=1000)
 clf.fit(X_train, y_train)
 clf_predict = clf.predict(X_test)
+
+feature_imp = pd.Series(clf.feature_importances_, index=relevant_columns).sort_values()
+
+# pd.Series(clf.feature_importances_, index=relevant_columns).\
+# sort_values(ascending=False).plot(kind='bar', color='blue')
 
 print(accuracy_score(y_test, clf_predict))
 print(confusion_matrix(y_test, clf_predict))
@@ -77,7 +85,45 @@ features.loc[:, "Interest Rate Proposed"] = features.loc[:, "Interest Rate Propo
 
 print(pd.DataFrame(clf.predict_proba(features)).mean())
 
-
 # Given the data at hand, develop a pricing model that, for each company, computes the optimal
 # price,
 # I.E. THE INTEREST RATE THAT MAXIMIZES THE PROBABILITY OF THAT CLIENT ACCEPTING THE OFFER.
+
+import scipy.stats as ss
+for i in df_answered.columns:
+    try:
+        print(i, ss.spearmanr(df_answered.loc[:, ['Interest Rate Proposed', i]]))
+    except:
+        print(i, 'error')
+
+
+# Relation between probability of accepting and yield
+# Maximize this ratio
+
+# trial with an item
+items = np.arange(0, 500, 10)
+for item in items:
+    pred = {}
+    ratio = {}
+    ratio2 = {}
+    old_acc_proba = 1
+    for i in np.arange(1, 10, 0.5):
+        features.ix[item, 'Interest Rate Proposed'] = i
+        acceptance_proba = clf.predict_proba(features.iloc[item, :].values.reshape(1, -1))[0][1]
+
+        if acceptance_proba > old_acc_proba:  # make it monotonous
+            acceptance_proba = old_acc_proba
+
+        pred[i] = acceptance_proba
+        ratio[i] = (1 - acceptance_proba) / i  # aka refusal probab (as low as possible) and yield /as high as possible)
+        ratio2[i] = acceptance_proba * 10 + i  # aka refusal probab (as low as possible) and yield /as high as possible)
+        old_acc_proba = acceptance_proba
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(311)
+    ax2 = fig.add_subplot(312)
+    ax3 = fig.add_subplot(313)
+    pd.Series(pred).plot(ax=ax1)
+    pd.Series(ratio).plot(ax=ax2)
+    pd.Series(ratio2).plot(ax=ax3)
+    plt.show()
