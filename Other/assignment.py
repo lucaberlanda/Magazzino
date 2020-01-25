@@ -1,6 +1,11 @@
+# CREDIMI CHALLENGE
+# Model for offering the best possible interest rate (i.e. maximizing the probability of being accepted) gived
+# a total portfolio yield of 3.5%
+
 import numpy as np
 import collections
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import accuracy_score
@@ -9,11 +14,13 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 
+sns.set_style('white')
 df_raw = pd.read_excel('futuro_applications_dataset.xlsx', sheet_name='dataset')
+plot_int_vs_rating = False
+
+# DATA CLEANING
 df_raw.columns = df_raw.iloc[0, :]
 df_raw = df_raw.drop(0)
-# print(df_raw.describe().T)
-
 cmp_list = df_raw.loc[:, 'Company ID'].values.tolist()
 cmp_doubles = [item for item, count in collections.Counter(cmp_list).items() if count > 1]
 df_raw = df_raw.set_index('Company ID')
@@ -21,30 +28,65 @@ df_raw = df_raw.set_index('Company ID')
 for cmp in cmp_doubles:
     df_raw = df_raw.drop(cmp)
 
+for i in df_raw.columns:
+    df_raw = df_raw.replace({i: {'inf': np.nan}})
+
+# dictionary to map credimi rating; since we will be using a Gradient Boosting /  Random Forest, we can overlook
+# the non-linearity in the rating definition, hence assigning a range from 0 to 10
+credimi_rating_mapping = {'A3': 1, 'A4': 2, 'B1': 3, 'B2': 4, 'B3': 5, 'B4': 6, 'C1': 7, 'C2': 8, 'C3': 9, 'C4': 10}
+df_raw = df_raw.replace({'Credimi algoRating': credimi_rating_mapping})
+
+# one hot encoding for Company Geo Area, ignore cities and region, prone to overfitting.
+df_raw = pd.concat([df_raw, pd.get_dummies(df_raw.loc[:, 'Company Geo Area'])], axis=1)
+
+y_mapping_dict_str = {'AcceptedByTheClient': 'Accepted',
+                      'Financed': 'Accepted',
+                      'ReadyForApproval': 'Accepted',
+                      'Uninterested': 'Refused'}
+
+y_mapping_dict = {'Accepted': 1,
+                  'Refused': 0}
+
+do_drop = ['Rejected']
+df_approved = df_raw[df_raw.dossierStatus != 'Rejected']
+df_tba = df_approved[df_approved.dossierStatus == 'ApprovedByCredimi']
+df_answered = df_approved[df_approved.dossierStatus.isin(list(y_mapping_dict_str.keys()))]
+df_answered = df_answered.replace({'dossierStatus': y_mapping_dict_str})
+
+# Box Whisker Plot with Interest Rate ?
+if plot_int_vs_rating:
+    # PLOT INTEREST RATE VS RATING
+    interest_vs_rating = df_answered.loc[:, ['Interest Rate Proposed', 'Credimi algoRating', 'dossierStatus']].dropna()
+    fig = plt.figure(1, figsize=(11, 6))
+    ax = fig.add_subplot(111)
+    acc_labels = list(set(y_mapping_dict_str.values()))
+    for acc_label in acc_labels:
+        to_plot = interest_vs_rating[interest_vs_rating.dossierStatus == acc_label]
+        ax.scatter(to_plot.loc[:, 'Interest Rate Proposed'], to_plot.loc[:, 'Credimi algoRating'], s=50, alpha=0.5)
+
+    ax.legend(acc_labels)
+    ax.set_xlabel('Interest Rate', size=13)
+    ax.set_ylabel('Algo Rating', size=13)
+    ax.set_title('Interest Rate vs Rating', size=20)
+    plt.tight_layout()
+    plt.show()
+
+df_answered = df_answered.replace({'dossierStatus': y_mapping_dict})
+
 df_raw.loc[:, 'Interest Rate Proposed'] = df_raw.loc[:, 'Interest Rate Proposed']. \
     fillna(df_raw.loc[:, 'Interest Rate Proposed'].median())
 
 df_raw.loc[:, 'fdgRating'] = df_raw.loc[:, 'fdgRating'].fillna(df_raw.loc[:, 'fdgRating'].mean())
 aggregations = {'applicationDate': 'count', 'Interest Rate Proposed': 'median', 'fdgRating': 'mean'}
 
-# Box Whisker Plot with Interest Rate
 # ptf without the rejected / not eligible companies
 # the acceptance depend on a variable that you should change
-# Plot (AcceptedByTheClient + Financed) vs (Uninterested)
-# Random Forest
-# The probability
 
 # seems reasonable to assume that the interest rate proposed would be lower than the one originally proposed
 y_mapping_dict = {'AcceptedByTheClient': 1,
                   'Financed': 1,
                   'ReadyForApproval': 1,
                   'Uninterested': 0}
-
-do_drop = ['Rejected']
-df_approved = df_raw[df_raw.dossierStatus != 'Rejected']
-df_tba = df_approved[df_approved.dossierStatus == 'ApprovedByCredimi']
-df_answered = df_approved[df_approved.dossierStatus.isin(list(y_mapping_dict.keys()))]
-df_answered = df_answered.replace({'dossierStatus': y_mapping_dict})
 
 relevant_columns = ["requestedAmount (€)", "Interest Rate Proposed",
                     "fdgAvailablePlafond (€)", "fdgRating", "Fatturato (€'000)", "Ebitda Margin (%)",
@@ -90,12 +132,12 @@ print(pd.DataFrame(clf.predict_proba(features)).mean())
 # I.E. THE INTEREST RATE THAT MAXIMIZES THE PROBABILITY OF THAT CLIENT ACCEPTING THE OFFER.
 
 import scipy.stats as ss
+
 for i in df_answered.columns:
     try:
         print(i, ss.spearmanr(df_answered.loc[:, ['Interest Rate Proposed', i]]))
     except:
         print(i, 'error')
-
 
 # Relation between probability of accepting and yield
 # Maximize this ratio
