@@ -6,6 +6,7 @@ import numpy as np
 import collections
 import pandas as pd
 import seaborn as sns
+import scipy.stats as ss
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import accuracy_score
@@ -17,6 +18,10 @@ from sklearn.model_selection import train_test_split
 sns.set_style('white')
 df_raw = pd.read_excel('futuro_applications_dataset.xlsx', sheet_name='dataset')
 plot_int_vs_rating = False
+get_spearman = True
+
+aggregations = {'applicationDate': 'count', 'Interest Rate Proposed': 'median', 'fdgRating': 'mean'}
+# todo funnel
 
 # DATA CLEANING
 df_raw.columns = df_raw.iloc[0, :]
@@ -71,39 +76,28 @@ if plot_int_vs_rating:
     plt.tight_layout()
     plt.show()
 
-df_answered = df_answered.replace({'dossierStatus': y_mapping_dict})
+to_drop_cols = ['applicationDate', 'Credit Decision Outcome', 'approvedAt', 'ATECO Identifier', 'Company City',
+                'Company Province', 'Company Geo Area', 'Company Region', 'Company ZIP Code', 'Juridicial Form',
+                'ATECO', 'Credimi Industry', 'Company Start Date', 'cr_date_eoy', 'last_available_cr_date']
 
-df_raw.loc[:, 'Interest Rate Proposed'] = df_raw.loc[:, 'Interest Rate Proposed']. \
-    fillna(df_raw.loc[:, 'Interest Rate Proposed'].median())
-
-df_raw.loc[:, 'fdgRating'] = df_raw.loc[:, 'fdgRating'].fillna(df_raw.loc[:, 'fdgRating'].mean())
-aggregations = {'applicationDate': 'count', 'Interest Rate Proposed': 'median', 'fdgRating': 'mean'}
-
-# ptf without the rejected / not eligible companies
-# the acceptance depend on a variable that you should change
+df_answered = df_answered.replace({'dossierStatus': y_mapping_dict}).drop(to_drop_cols, axis=1)
+df_answered = df_answered.dropna(how='all', axis=1).fillna(df_answered.mean())
 
 # seems reasonable to assume that the interest rate proposed would be lower than the one originally proposed
-y_mapping_dict = {'AcceptedByTheClient': 1,
-                  'Financed': 1,
-                  'ReadyForApproval': 1,
-                  'Uninterested': 0}
+labels = df_answered.loc[:, 'dossierStatus']
+features = df_answered.drop('dossierStatus', axis=1)
+features_refusals = features.loc[labels[labels == 0].index, :]
+features_labels = features.columns.tolist()
 
-relevant_columns = ["requestedAmount (€)", "Interest Rate Proposed",
-                    "fdgAvailablePlafond (€)", "fdgRating", "Fatturato (€'000)", "Ebitda Margin (%)",
-                    "Tasso Medio Pagato (Stima da Bilancio, %)", "Tasso Medio Pagato (Stima da Centrale Rischi, %)",
-                    "cerved_structural_score_c6gvrn", "cash (€'000)", "consolidatedLiabilities (€'000)",
-                    "utilizzo_scadenza_t-2 (€'000)", "utilizzo_scadenza_t-3 (€'000)", "utilizzo_scadenza_t-4 (€'000)",
-                    "utilizzo_scadenza_t-5 (€'000)", "last_tension_autoliquidanti",
-                    "last_tension_scadenza", "avg_6m_tension_autoliquidanti", "avg_6m_tension_revoca",
-                    "avg_6m_tension_scadenza", "Age", "accordato_revoca_t-4 (€'000)", "accordato_revoca_t-5 (€'000)",
-                    "accordato_scadenza_t (€'000)", "accordato_scadenza_t-1 (€'000)", "accordato_scadenza_t-2 (€'000)",
-                    "accordato_scadenza_t-3 (€'000)", "accordato_scadenza_t-4 (€'000)",
-                    "accordato_scadenza_t-5 (€'000)", "affidanti_t", "affidanti_t-1", "affidanti_t-2", "affidanti_t-3",
-                    "affidanti_t-4", "affidanti_t-5", "last_accordato_tot"]
+# compute SPEARMAN CORRELATION to get better how credit algo works
+if get_spearman:
+    spearman_dict = {}
+    for i in features.columns:
+        sp_corr = ss.spearmanr(pd.concat([features.loc[:, i], features.loc[:, 'Interest Rate Proposed']], axis=1))[0]
+        print(sp_corr)
+        spearman_dict[i] = sp_corr
 
-labels = df_answered.dossierStatus
-features = df_answered.loc[:, relevant_columns]
-features = features.fillna(features.median())
+    print(pd.Series(spearman_dict).sort_values(ascending=False))
 
 X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.4)
 # clf = RandomForestClassifier(n_estimators=500, max_depth=5)
@@ -111,15 +105,13 @@ clf = GradientBoostingClassifier(n_estimators=1000)
 clf.fit(X_train, y_train)
 clf_predict = clf.predict(X_test)
 
-feature_imp = pd.Series(clf.feature_importances_, index=relevant_columns).sort_values()
-
+feature_imp = pd.Series(clf.feature_importances_, index=features_labels).sort_values()
 # pd.Series(clf.feature_importances_, index=relevant_columns).\
 # sort_values(ascending=False).plot(kind='bar', color='blue')
 
 print(accuracy_score(y_test, clf_predict))
 print(confusion_matrix(y_test, clf_predict))
-print(clf.feature_importances_)
-
+print(pd.Series(clf.feature_importances_, index=features_labels).sort_values(ascending=False))
 print(pd.DataFrame(clf.predict_proba(features)).mean())
 
 features.loc[:, "Interest Rate Proposed"] = features.loc[:, "Interest Rate Proposed"] - \
@@ -129,16 +121,6 @@ print(pd.DataFrame(clf.predict_proba(features)).mean())
 
 # Given the data at hand, develop a pricing model that, for each company, computes the optimal
 # price,
-# I.E. THE INTEREST RATE THAT MAXIMIZES THE PROBABILITY OF THAT CLIENT ACCEPTING THE OFFER.
-
-import scipy.stats as ss
-
-for i in df_answered.columns:
-    try:
-        print(i, ss.spearmanr(df_answered.loc[:, ['Interest Rate Proposed', i]]))
-    except:
-        print(i, 'error')
-
 # Relation between probability of accepting and yield
 # Maximize this ratio
 
@@ -150,8 +132,8 @@ for item in items:
     ratio2 = {}
     old_acc_proba = 1
     for i in np.arange(1, 10, 0.5):
-        features.ix[item, 'Interest Rate Proposed'] = i
-        acceptance_proba = clf.predict_proba(features.iloc[item, :].values.reshape(1, -1))[0][1]
+        features_refusals.ix[item, 'Interest Rate Proposed'] = i
+        acceptance_proba = clf.predict_proba(features_refusals.iloc[item, :].values.reshape(1, -1))[0][1]
 
         if acceptance_proba > old_acc_proba:  # make it monotonous
             acceptance_proba = old_acc_proba
