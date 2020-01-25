@@ -18,7 +18,7 @@ from sklearn.model_selection import train_test_split
 sns.set_style('white')
 df_raw = pd.read_excel('futuro_applications_dataset.xlsx', sheet_name='dataset')
 plot_int_vs_rating = False
-get_spearman = True
+get_spearman = False
 
 aggregations = {'applicationDate': 'count', 'Interest Rate Proposed': 'median', 'fdgRating': 'mean'}
 # todo funnel
@@ -106,48 +106,62 @@ clf.fit(X_train, y_train)
 clf_predict = clf.predict(X_test)
 
 feature_imp = pd.Series(clf.feature_importances_, index=features_labels).sort_values()
-# pd.Series(clf.feature_importances_, index=relevant_columns).\
-# sort_values(ascending=False).plot(kind='bar', color='blue')
+# pd.Series(clf.feature_importances, index=relevant_columns).sort_values(ascending=False).plot(kind='bar', color='blue')
 
 print(accuracy_score(y_test, clf_predict))
 print(confusion_matrix(y_test, clf_predict))
-print(pd.Series(clf.feature_importances_, index=features_labels).sort_values(ascending=False))
-print(pd.DataFrame(clf.predict_proba(features)).mean())
-
-features.loc[:, "Interest Rate Proposed"] = features.loc[:, "Interest Rate Proposed"] - \
-                                            features.loc[:, "Interest Rate Proposed"] * 0.5
-
-print(pd.DataFrame(clf.predict_proba(features)).mean())
-
-# Given the data at hand, develop a pricing model that, for each company, computes the optimal
-# price,
-# Relation between probability of accepting and yield
-# Maximize this ratio
 
 # trial with an item
-items = np.arange(0, 500, 10)
-for item in items:
+new_comp_ptf = {}
+for comp in features_refusals.index:
+    comp_info = {}
     pred = {}
     ratio = {}
-    ratio2 = {}
+    old_acc_proba = 1
+    original_int_rate = features_refusals.loc[comp, 'Interest Rate Proposed']
+    for i in np.arange(1, 10, 0.5):
+        features_refusals.loc[comp, 'Interest Rate Proposed'] = i
+        acceptance_proba = clf.predict_proba(features_refusals.loc[comp, :].values.reshape(1, -1))[0][1]
+        # make probability monotonous in order to avoid counter-intuitive behaviours
+        if acceptance_proba > old_acc_proba:
+            acceptance_proba = old_acc_proba
+
+        pred[i] = acceptance_proba
+        old_acc_proba = acceptance_proba
+
+    pred_s = pd.Series(pred)
+    proposed_int = max(pred_s[pred_s == max(pred_s)].index)
+    comp_info['proposed_interest'] = proposed_int
+    comp_info['acceptance_prob'] = round(max(pred_s), 3)
+    comp_info['amount'] = features_refusals.loc[comp, 'amountProposed (€)']
+    comp_info['old_interest'] = original_int_rate
+    new_comp_ptf[comp] = comp_info
+
+print('ciao')
+quit()
+
+for comp in features_refusals.index:
+    pred = {}
+    ratio = {}
     old_acc_proba = 1
     for i in np.arange(1, 10, 0.5):
-        features_refusals.ix[item, 'Interest Rate Proposed'] = i
+        features_refusals.ix[comp, 'Interest Rate Proposed'] = i
         acceptance_proba = clf.predict_proba(features_refusals.iloc[item, :].values.reshape(1, -1))[0][1]
-
-        if acceptance_proba > old_acc_proba:  # make it monotonous
+        # make probability monotonous in order to avoid counter-intuitive behaviours
+        if acceptance_proba > old_acc_proba:
             acceptance_proba = old_acc_proba
 
         pred[i] = acceptance_proba
         ratio[i] = (1 - acceptance_proba) / i  # aka refusal probab (as low as possible) and yield /as high as possible)
-        ratio2[i] = acceptance_proba * 10 + i  # aka refusal probab (as low as possible) and yield /as high as possible)
         old_acc_proba = acceptance_proba
 
     fig = plt.figure()
-    ax1 = fig.add_subplot(311)
-    ax2 = fig.add_subplot(312)
-    ax3 = fig.add_subplot(313)
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212)
     pd.Series(pred).plot(ax=ax1)
     pd.Series(ratio).plot(ax=ax2)
-    pd.Series(ratio2).plot(ax=ax3)
     plt.show()
+
+
+pred_s = pd.Series(pred)
+print(pred_s[pred_s == max(pred_s)])
