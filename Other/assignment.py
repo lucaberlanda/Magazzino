@@ -111,7 +111,6 @@ feature_imp = pd.Series(clf.feature_importances_, index=features_labels).sort_va
 print(accuracy_score(y_test, clf_predict))
 print(confusion_matrix(y_test, clf_predict))
 
-# trial with an item
 new_comp_ptf = {}
 for comp in features_refusals.index:
     comp_info = {}
@@ -119,7 +118,7 @@ for comp in features_refusals.index:
     ratio = {}
     old_acc_proba = 1
     original_int_rate = features_refusals.loc[comp, 'Interest Rate Proposed']
-    for i in np.arange(1, 10, 0.5):
+    for i in np.arange(1, 10.5, 0.5):
         features_refusals.loc[comp, 'Interest Rate Proposed'] = i
         acceptance_proba = clf.predict_proba(features_refusals.loc[comp, :].values.reshape(1, -1))[0][1]
         # make probability monotonous in order to avoid counter-intuitive behaviours
@@ -131,11 +130,43 @@ for comp in features_refusals.index:
 
     pred_s = pd.Series(pred)
     proposed_int = max(pred_s[pred_s == max(pred_s)].index)
-    comp_info['proposed_interest'] = proposed_int
-    comp_info['acceptance_prob'] = round(max(pred_s), 3)
+
+    comp_info['proposed_interest_plus_0bp'] = proposed_int
+    comp_info['proposed_interest_plus_50bp'] =  min(proposed_int + 0.5, 10)
+    comp_info['proposed_interest_plus_100bp'] = min(proposed_int + 1, 10)
+    comp_info['proposed_interest_plus_150bp'] = min(proposed_int + 1.5, 10)
+
+    comp_info['acceptance_prob_plus_0bp'] = round(max(pred_s), 3)
+    comp_info['acceptance_prob_plus_50bp'] = pred_s.loc[min(proposed_int + 0.5, 10)]
+    comp_info['acceptance_prob_plus_100bp'] = pred_s.loc[min(proposed_int + 1, 10)]
+    comp_info['acceptance_prob_plus_150bp'] = pred_s.loc[min(proposed_int + 1.5, 10)]
+
     comp_info['amount'] = features_refusals.loc[comp, 'amountProposed (€)']
     comp_info['old_interest'] = original_int_rate
     new_comp_ptf[comp] = comp_info
+
+probs_db = pd.DataFrame(new_comp_ptf).T
+bp_diff = [0, 0.5, 1, 1.5]
+for i in bp_diff:
+    aa = probs_db.loc[:, ['amount',
+                          'old_interest',
+                          'proposed_interest_plus_%sbp' % str(i),
+                          'acceptance_prob_plus_%sbp' % str(i)]]
+
+    aa['int_diff'] = aa.loc[:, 'old_interest'] - aa.loc[:, 'proposed_interest_plus_%sbp' % str(i)]
+    to_propose = aa[aa.int_diff > 0]
+    acceptance_dict = {}
+    for comp in to_propose.index:
+        prob = to_propose.loc[comp, 'acceptance_prob_plus_%sbp' % str(i)]
+        choice = np.random.choice([1, 0], size=100, p=[prob, 1 - prob])
+        acceptance_dict[comp] = pd.Series(choice)
+    bb = pd.DataFrame(acceptance_dict)
+
+    for sim in bb.index:
+        scenario = bb.loc[sim, :]
+        acc_in_sim = scenario[scenario == 1]
+        print(to_propose.loc[acc_in_sim.index, ['amount']])
+
 
 print('ciao')
 quit()
