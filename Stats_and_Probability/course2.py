@@ -4,6 +4,60 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as sc
 
+x = np.zeros((2,1)) #initial value of x
+x[0,0] = 0
+x[1,0] = 0
+f = np.zeros((2,1))
+iteration = 0
+delta = np.ones((2,1))
+while max(abs(delta)) > 1e-7 and iteration <= 100:
+    # Define the function
+    f[0,0] = 14-np.exp(x[0]+x[1])-np.exp(x[0]+2*x[1])-np.exp(x[0]+4*x[1])
+    f[1,0] = 47-np.exp(x[0]+x[1])-2*np.exp(x[0]+2*x[1])-4*np.exp(x[0]+4*x[1])
+
+    # Define the Jacobian
+    j = np.zeros((2,2))
+    j[0,0] = -np.exp(x[0]+x[1])-np.exp(x[0]+2*x[1])-np.exp(x[0]+4*x[1])
+    j[0,1] = -np.exp(x[0]+x[1])-2*np.exp(x[0]+2*x[1])-4*np.exp(x[0]+4*x[1])
+    j[1,0] = -np.exp(x[0]+x[1])-2*np.exp(x[0]+2*x[1])-4*np.exp(x[0]+4*x[1])
+    j[1,1] = -np.exp(x[0]+x[1])-4*np.exp(x[0]+2*x[1])-16*np.exp(x[0]+4*x[1])
+
+    delta = -np.linalg.inv(j).dot(f)
+    x = x+delta
+    iteration = iteration+1
+
+
+a_hat = round(x[0,0],2)
+b_hat = round(x[1,0],2)
+lambda_3 = np.exp(a_hat+3*b_hat)
+print('No. of iteration = ', iteration)
+print('a_hat = ',a_hat)
+print('b_hat =  ',b_hat)
+quit()
+
+
+# PREDATOR/PREY
+to_plot = {}
+to_plot_exp_value = {}
+
+preys = np.random.randint(1, 100, 1000)
+
+m = 100
+h = 100
+
+for cnt, prey in enumerate(preys):
+    mu = (m*prey)/(h+prey)
+    to_plot[cnt] = {'preys': prey, 'hunted': np.random.poisson(mu)}
+    to_plot_exp_value[cnt] = {'preys': prey, 'hunted': mu}
+
+fig = plt.figure(facecolor='white')
+ax = fig.add_subplot(111)
+
+prey_and_hunted = pd.DataFrame(to_plot).T
+prey_and_hunted_expected_value = pd.DataFrame(to_plot_exp_value).T
+prey_and_hunted.plot(kind='scatter', x='preys', y='hunted', ax=ax, alpha=0.2)
+prey_and_hunted_expected_value.plot(kind='scatter', x='preys', y='hunted', c='red', ax=ax)
+
 # Cochrane
 res_dict = {}
 for i in range(1000):
