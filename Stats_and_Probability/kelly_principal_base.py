@@ -11,7 +11,7 @@ class KellyPrincipleBaseClass:
 
         """
         :param p: float; probability of winning
-        :param bet_amount: float; between 0 and 1 dollar; it correspond to the percentage of money bet
+        :param bet_percentage: float; between 0 and 1 dollar; it correspond to the percentage of money bet
         :param sample: int; how many draws should be taken (T)
         :param quote:
 

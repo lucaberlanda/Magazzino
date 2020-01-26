@@ -2,15 +2,18 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+from pwds import pwd_luca
+from psycopg2 import connect
+from sqlalchemy import create_engine
+
 sns.set_style('white')
 
 """
-
 Replicate the Paper:
 Surprised by the Gambler’s and Hot Hand Fallacies? A Truth in the Law of Small Numbers
 (http://www.thebigquestions.com/hothand2.pdf)
 by Joshua Miller
-
 """
 
 # 1 is success
@@ -46,22 +49,13 @@ for j in sample_size:
     success_rate_list_over_n.append(sequence_length_mean)
 
 aa = pd.Series(success_rate_list_over_n).plot()
-
 plt.show()
-
-from sqlalchemy import create_engine
-from psycopg2 import connect
 
 conn_psycopg = connect(
     dbname='postgres',
     host='localhost',
     user='postgres',
-    password='pastulla1')
+    password=pwd_luca)
 
 conn = create_engine('postgres', echo=False).connect()
-
-# cur = conn_psycopg.cursor()
-# cur.execute("AAA")
-# conn_psycopg.commit()
-
 aa.to_sql('hot_hands_fallacy', conn, if_exists='append')

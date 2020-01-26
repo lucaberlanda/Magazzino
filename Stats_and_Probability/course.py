@@ -3,6 +3,117 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as sc
+from scipy.stats import rv_continuous
+
+from scipy.stats import rv_continuous
+
+
+n = 100
+aa = []
+
+# p = 0.384
+# q = 0.505
+
+p = 0.4
+q = 0.6
+V = p**2*q**2-q**2*p+p*q-q*p**2
+
+print(V)
+print(np.sqrt(V))
+for i in range(2000):
+    x = np.random.binomial(1, p, size=n)
+    y = np.random.binomial(1, q, size=n)
+    # y = [np.random.binomial(1, 0.2) if i == 1 else np.random.binomial(1, 0.8) for i in x]
+    xy = pd.DataFrame([x, y]).T
+    xy.columns = ['x', 'y']
+    xy['r'] = xy.x * xy.y
+    aa.append(xy.mean())
+
+bb = pd.concat(aa, axis=1).T
+diff = bb.r - bb.y * bb.x
+dd = diff / diff.std()
+dd.plot(kind='hist', bins=25, alpha=0.3)
+ee = diff * np.sqrt(n) / np.sqrt(V)
+ee.plot(kind='hist', bins=25, alpha=0.3)
+plt.show()
+var_v = diff.var() * n
+std_v = np.sqrt(var_v)
+print(var_v)
+print(std_v)
+quit()
+
+n = 1000
+aa = []
+for i in range(10):
+    x = np.random.binomial(1, 0.384, size=n)
+    y = np.random.binomial(1, 0.505, size=n)
+    # y = [np.random.binomial(1, 0.2) if i == 1 else np.random.binomial(1, 0.8) for i in x]
+    xy = pd.DataFrame([x, y]).T
+    xy.columns = ['x', 'y']
+    xy['r'] = xy.x * xy.y
+    aa.append(xy.mean())
+
+
+print(pd.concat(aa, axis=1).T)
+print(pd.concat(aa, axis=1).T.mean())
+print(pd.concat(aa, axis=1).T.cov() * n)
+
+
+n = 100000
+x = np.random.binomial(1, 0.5, size=n)
+y = [np.random.binomial(1, 0.75) if i == 1 else np.random.binomial(1, 0.25) for i in x]
+xy = pd.DataFrame([x, y]).T
+xy.columns = ['x', 'y']
+xy['r'] = xy.x * xy.y
+print(xy.mean())
+
+
+n=10
+x = np.random.binomial(1, 0.5, size=n)
+y = [np.random.binomial(1, 0.75) if i == 1 else np.random.binomial(1, 0.25) for i in x]
+
+# n = 100 and n = 1000000
+n_it = 10000
+n = 100
+means = pd.Series(np.random.chisquare(n, n_it))/n
+print(means.quantile(0.95), means.var(), means.mean())
+
+n = 1000
+n_it = 100000
+means = pd.Series(np.random.chisquare(n, n_it))
+normalized = ((means/n) - 1)*np.sqrt(n)
+print(normalized.quantile(0.975))
+
+
+
+n = 10
+means = []
+for i in range(10000):
+    mn = (pd.Series(np.random.standard_normal(n))**2).mean()
+    means.append(mn)
+((pd.Series(means) - 1) * np.sqrt(n)).plot(kind='hist', bins=100)
+plt.show()
+
+print('ciao')
+
+class gaussian_gen(rv_continuous):
+    """Gaussian distribution"""
+    def _pdf(self, x):
+        return np.exp(-x**2 / 2.) * x
+
+gaussian = gaussian_gen(a=0, name='gaussian')
+a = pd.Series(np.random.normal(0, 1, 100))
+b = pd.Series(np.random.normal(0, 1, 100))
+c = ((a - a.mean())**2).mean()
+d = ((a - a.median())**2).mean()
+print('mean', c, 'median', d)
+e = (abs(a - a.median())).mean()
+f = (abs(a - a.mean())).mean()
+print('mean', f, 'median', e)
+g = (abs(a - a.mean())).var()
+h = (abs(a - a.median())).var()
+print('mean', g, 'median', h)
+
 
 # Cochrane
 res_dict = {}

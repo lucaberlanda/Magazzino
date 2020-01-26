@@ -8,12 +8,12 @@ sns.set_style("whitegrid")
 trials = 1000
 samples = 100000
 prob_of_success = 0.5
-percentage_distance_from_mean = 0.5
+pct_distance_from_mean = 0.5
 expected_value = prob_of_success * trials
 
 ##########
 
-percentage_distance_from_mean_range = np.arange(0, 0.5, 0.01)
+pct_dist_from_mean_range = np.arange(0, 0.5, 0.01)
 generic_range = range(0, 50, 1)
 
 """
@@ -45,12 +45,10 @@ def chernoff_bounds(percentage_distance_from_mean, expected_value):
 
     return bounds
 
-# plot various chernoff bounds for various distance from mean __________________________________________________________
-
 
 dict_to_store = {}
 
-for i, j in zip(percentage_distance_from_mean_range, generic_range):
+for i, j in zip(pct_dist_from_mean_range, generic_range):
     dict_to_store[j] = chernoff_bounds(i, expected_value)
 
 bounds_evolution = pd.DataFrame(dict_to_store).T

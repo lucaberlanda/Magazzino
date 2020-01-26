@@ -18,15 +18,16 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import Stats_and_Probability.functions_involved as finv
+
 sns.set_style('dark')
 
-##############
+# params
+
 sigma = 0.05
 T = 100
 dt = 1
 x0 = 0
 threshold = 0.5
-##############
 
 bm = finv.brownian(x0, T, dt, sigma, seed=True)
 X = pd.Series(bm)
