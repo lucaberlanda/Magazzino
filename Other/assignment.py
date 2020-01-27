@@ -195,3 +195,59 @@ for i in bp_diff:
     ax3.legend(bp_diff)
 
 plt.show()
+
+aggregations_funnel = {'applicationDate': 'count', 'Interest Rate Proposed': 'median', 'fdgRating': 'mean'}
+df_raw.groupby('dossierStatus').agg(aggregations_funnel)
+df_raw.loc[:, u'requestedAmount (€)'] = df_raw.loc[:, u'requestedAmount (€)'].fillna(0)
+df_raw.loc[:, u'amountProposed (€)'] = df_raw.loc[:, u'amountProposed (€)'].fillna(0)
+df_raw['amount_prop_vs_req'] = df_raw.loc[:, u'amountProposed (€)'] / df_raw.loc[:, u'requestedAmount (€)'] -1
+size_risk = df_raw.groupby(['dossierStatus', 'Credimi algoRating']) # , pd.cut(df.views, bins)])
+aggregations_size_risk = {u'requestedAmount (€)': 'median', u'amountProposed (€)': 'median', 'amount_prop_vs_req': 'median'}
+size_risk.agg(aggregations_size_risk)
+bins = 10
+size_risk = df_raw.groupby(['dossierStatus', pd.cut(df_raw.loc[:,u"Fatturato (€'000)"], bins)])
+aggregations_size_risk = {u'requestedAmount (€)': 'median', u'amountProposed (€)': 'median', 'amount_prop_vs_req': 'median'}
+size_risk.agg(aggregations_size_risk)
+
+
+def propose_optimal_interest_rate(cmp_info):
+    old_acc_proba = 1
+    original_int_rate = cmp_info.loc['Interest Rate Proposed']
+
+    for i in np.arange(1, 10.5, 0.5):
+        cmp_info.loc['Interest Rate Proposed'] = i
+        acceptance_proba = clf.predict_proba(cmp_info.values.reshape(1, -1))[0][1]
+        # make probability monotonous in order to avoid counter-intuitive behaviours
+        if acceptance_proba > old_acc_proba:
+            acceptance_proba = old_acc_proba
+
+        pred[i] = acceptance_proba
+        old_acc_proba = acceptance_proba
+
+    pred_s = pd.Series(pred)
+    proposed_int = max(pred_s[pred_s == max(pred_s)].index)
+    return proposed_int, pred_s
+
+
+new_comp_ptf = {}
+for comp in features_refusals.index:
+    comp_info = {}
+    pred = {}
+    ratio = {}
+
+    # optimal interest and range
+    optimal_int, int_curve = propose_optimal_interest_rate(features_refusals.loc[comp, :])
+
+    comp_info['proposed_interest_plus_0bp'] = optimal_int
+    comp_info['proposed_interest_plus_50bp'] = min(optimal_int + 0.5, 10)
+    comp_info['proposed_interest_plus_100bp'] = min(optimal_int + 1, 10)
+    comp_info['proposed_interest_plus_150bp'] = min(optimal_int + 1.5, 10)
+
+    comp_info['acceptance_prob_plus_0bp'] = round(max(int_curve), 3)
+    comp_info['acceptance_prob_plus_50bp'] = pred_s.loc[min(int_curve + 0.5, 10)]
+    comp_info['acceptance_prob_plus_100bp'] = pred_s.loc[min(int_curve + 1, 10)]
+    comp_info['acceptance_prob_plus_150bp'] = pred_s.loc[min(int_curve + 1.5, 10)]
+
+    comp_info['amount'] = features_refusals.loc[comp, u'amountProposed (€)']
+    comp_info['old_interest'] = original_int_rate
+    new_comp_ptf[comp] = comp_info
