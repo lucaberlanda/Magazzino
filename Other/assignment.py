@@ -101,7 +101,9 @@ if get_spearman:
 
 X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.4)
 # clf = RandomForestClassifier(n_estimators=500, max_depth=5)
-clf = GradientBoostingClassifier(n_estimators=1000)
+clf = GradientBoostingClassifier(n_estimators=10000,
+                                 min_samples_split=5,
+                                 min_samples_leaf=5)
 clf.fit(X_train, y_train)
 clf_predict = clf.predict(X_test)
 
@@ -132,7 +134,7 @@ for comp in features_refusals.index:
     proposed_int = max(pred_s[pred_s == max(pred_s)].index)
 
     comp_info['proposed_interest_plus_0bp'] = proposed_int
-    comp_info['proposed_interest_plus_50bp'] =  min(proposed_int + 0.5, 10)
+    comp_info['proposed_interest_plus_50bp'] = min(proposed_int + 0.5, 10)
     comp_info['proposed_interest_plus_100bp'] = min(proposed_int + 1, 10)
     comp_info['proposed_interest_plus_150bp'] = min(proposed_int + 1.5, 10)
 
@@ -145,12 +147,13 @@ for comp in features_refusals.index:
     comp_info['old_interest'] = original_int_rate
     new_comp_ptf[comp] = comp_info
 
+fig = plt.figure(1, figsize=(11, 6))
+ax2 = fig.add_subplot(211)
+ax3 = fig.add_subplot(212)
 probs_db = pd.DataFrame(new_comp_ptf).T
-bp_diff = [0, 0.5, 1, 1.5]
+bp_diff = [0, 50, 100, 150]
 for i in bp_diff:
-    aa = probs_db.loc[:, ['amount',
-                          'old_interest',
-                          'proposed_interest_plus_%sbp' % str(i),
+    aa = probs_db.loc[:, ['amount', 'old_interest', 'proposed_interest_plus_%sbp' % str(i),
                           'acceptance_prob_plus_%sbp' % str(i)]]
 
     aa['int_diff'] = aa.loc[:, 'old_interest'] - aa.loc[:, 'proposed_interest_plus_%sbp' % str(i)]
@@ -160,39 +163,35 @@ for i in bp_diff:
         prob = to_propose.loc[comp, 'acceptance_prob_plus_%sbp' % str(i)]
         choice = np.random.choice([1, 0], size=100, p=[prob, 1 - prob])
         acceptance_dict[comp] = pd.Series(choice)
-    bb = pd.DataFrame(acceptance_dict)
 
-    for sim in bb.index:
-        scenario = bb.loc[sim, :]
+    new_ptfs_dict = {}
+    acceptance_df = pd.DataFrame(acceptance_dict)
+    for sim in acceptance_df.index:
+        new_ptf_dict = {}
+        scenario = acceptance_df.loc[sim, :]
         acc_in_sim = scenario[scenario == 1]
-        print(to_propose.loc[acc_in_sim.index, ['amount']])
+        new_accepted = to_propose.loc[acc_in_sim.index, :]
 
+        new_ptf_size = new_accepted.amount.sum()
+        new_clients = len(new_accepted.index)
+        new_accepted['amount_pct'] = new_accepted.amount / new_ptf_size
+        new_ptf_yield = new_accepted.loc[:, 'amount_pct'].\
+            dot(new_accepted.loc[:, 'proposed_interest_plus_%sbp' % str(i)])
 
-print('ciao')
-quit()
+        new_ptf_dict['yield'] = new_ptf_yield
+        new_ptf_dict['amount'] = new_ptf_size
+        new_ptf_dict['new_clients'] = new_clients
+        new_ptfs_dict[sim] = new_ptf_dict
 
-for comp in features_refusals.index:
-    pred = {}
-    ratio = {}
-    old_acc_proba = 1
-    for i in np.arange(1, 10, 0.5):
-        features_refusals.ix[comp, 'Interest Rate Proposed'] = i
-        acceptance_proba = clf.predict_proba(features_refusals.iloc[item, :].values.reshape(1, -1))[0][1]
-        # make probability monotonous in order to avoid counter-intuitive behaviours
-        if acceptance_proba > old_acc_proba:
-            acceptance_proba = old_acc_proba
+    new_ptf_df = pd.DataFrame(new_ptfs_dict).T
 
-        pred[i] = acceptance_proba
-        ratio[i] = (1 - acceptance_proba) / i  # aka refusal probab (as low as possible) and yield /as high as possible)
-        old_acc_proba = acceptance_proba
+    ax2.scatter(new_ptf_df.loc[:, 'new_clients'],
+                new_ptf_df.loc[:, 'yield'], s=50, alpha=0.5)
 
-    fig = plt.figure()
-    ax1 = fig.add_subplot(211)
-    ax2 = fig.add_subplot(212)
-    pd.Series(pred).plot(ax=ax1)
-    pd.Series(ratio).plot(ax=ax2)
-    plt.show()
+    ax3.scatter(new_ptf_df.loc[:, 'amount'],
+                new_ptf_df.loc[:, 'yield'], s=50, alpha=0.5)
 
+    ax2.legend(bp_diff)
+    ax3.legend(bp_diff)
 
-pred_s = pd.Series(pred)
-print(pred_s[pred_s == max(pred_s)])
+plt.show()
