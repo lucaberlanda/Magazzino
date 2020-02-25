@@ -2,20 +2,18 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-x_1 = np.array([-4, 2])
-x_2 = np.array([-2, 1])
-x_3 = np.array([-1, -1])
-x_4 = np.array([2, 2])
-x_5 = np.array([1, -2])
+x_1 = np.array([-1, 0, 0, 0])
+x_2 = np.array([0, 1, 0, 0])
+x_3 = np.array([0, 0, -1, 0])
+x_4 = np.array([0, 0, 0, 1])
 
 y_1 = 1
 y_2 = 1
-y_3 = -1
-y_4 = -1
-y_5 = -1
+y_3 = 1
+y_4 = 1
 
-xs = [x_1, x_2, x_3, x_4, x_5]
-ys = [y_1, y_2, y_3, y_4, y_5]
+xs = [x_1, x_4, x_3, x_2]
+ys = [y_1, y_4, y_3, y_2]
 
 scatter = False
 if scatter:
@@ -26,9 +24,21 @@ if scatter:
     xs_df.iloc[2:, :].plot(kind='scatter', x='x', y='y', ax=ax1, c='red')
     plt.show()
 
-theta = np.array([0, 0])  # initialize theta
-theta_0 = 0
+theta = np.array([0, 0, 0, 0])  # initialize theta
 
+T = 100
+error_cnt = 0
+for t in np.arange(0, T):
+    for i, x in enumerate(xs):
+        print(theta)
+        if ys[i] * (np.dot(theta, x)) <= 0:
+            error_cnt += 1
+            print(i)
+            print('error', error_cnt)
+            # print(to_use_y[i], x, theta, (np.dot(theta, x)))
+            theta = theta + x * ys[i]
+quit()
+theta_0 = 0
 T = 100
 error_cnt = 0
 for t in np.arange(0, T):
