@@ -22,3 +22,7 @@ def quartiles(length=2000, n_timeseries=100, save_figure=False, threshold_percen
         plt.savefig('demo2.png', transparent=True)
     else:
         plt.show()
+
+
+def feature_transformation():
+    np.random()

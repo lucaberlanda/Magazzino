@@ -1,3 +1,3 @@
-from Visualization.functions import quartiles
+from Visualization.functions import *
 
 quartiles()
