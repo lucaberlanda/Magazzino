@@ -59,7 +59,6 @@ def reshuffled_ts(ts):
 def lagging_kurtosis(ts, max_lag=100):
     kurt_dict = {}
     for days in range(1, max_lag):
-        ts[::days].pct_change().plot()
         kurt = ts[::days].pct_change().kurt() + 3  # since it is excess kurtosis
         kurt_dict[days] = kurt
     return kurt_dict
