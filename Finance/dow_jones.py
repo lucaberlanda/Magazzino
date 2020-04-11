@@ -17,10 +17,24 @@ def plot_kurtosis(kurt_original, kurt_reshuffled):
     plt.show()
 
 
+index_name = 'dow_jones'
 df = get_dow_jones()
-dj = df.loc[:, 'dow_jones']
+dj = df.loc[:, index_name]
 dj_ret = dj.pct_change()
 dj_log_ret = np.log(dj) - np.log(dj.shift(1))
+
+dj_ret = pd.Series(np.random.normal(dj_ret.mean(), dj_ret.std(), size=len(dj_ret.index)))
+dj_ret.name = index_name
+sorted_returns = dj_ret.dropna().sort_values(ascending=False).reset_index().loc[:, index_name]
+negative_ret = sorted_returns[sorted_returns < 0]
+
+K_dict = {}
+negative_ret_flt = negative_ret[negative_ret < -0.02]
+for i in negative_ret_flt.index:
+    K_dict[-negative_ret_flt.loc[i]] = (negative_ret_flt.loc[i:] * -1).mean() / (-negative_ret_flt.loc[i])
+
+pd.Series(K_dict).iloc[:-1].plot()
+plt.show()
 
 log_log_plot_with_threshold(dj_log_ret, threshold=0.01)
 
