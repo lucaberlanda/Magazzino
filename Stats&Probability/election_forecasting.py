@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import Stats_and_Probability.functions_involved as finv
+import StatsAndProbability.functions_involved as finv
 
 sns.set_style('dark')
 
