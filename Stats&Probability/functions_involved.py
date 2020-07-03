@@ -1,12 +1,8 @@
-"""
-brownian() implements one dimensional Brownian motion (i.e. the Wiener process).
-"""
-
-# File: brownian.py
+import numpy as np
+import pandas as pd
 
 from math import sqrt
 from scipy.stats import norm
-import numpy as np
 
 
 def brownian(x0, n, dt, delta, out=None, seed=False):

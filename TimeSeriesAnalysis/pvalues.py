@@ -3,6 +3,9 @@ import pandas as pd
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 import seaborn as sns
+from fbprophet import Prophet
+
+
 sns.set_style('white')
 
 sample_size = 10

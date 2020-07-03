@@ -84,3 +84,26 @@ def ME_plot(s, starting_threshold=0):
     to_plot.columns = ['threshold', 'mean_exceedances']
     to_plot.plot(x='threshold', y='mean_exceedances', kind='scatter', alpha=0.5, s=70).set_title('ME plot')
     plt.show()
+
+
+def excess_return_calc(stock_ri, bmk):
+    """
+
+    :param stock_ri: pandas Series; the series of the asset
+    :param bmk: pandas Series; the series of the benchmark
+    :return: the excess return time-series
+    """
+
+    min_date = max(stock_ri.index[0], bmk.index[0])
+    max_date = min(stock_ri.index[-1], bmk.index[-1])
+
+    stock_ri = stock_ri.truncate(before=min_date, after=max_date)
+    bmk = bmk.truncate(before=min_date, after=max_date)
+
+    stock_ret = stock_ri.pct_change().dropna()
+    bmk_ret = bmk.pct_change().dropna()
+
+    excess_return = stock_ret - bmk_ret
+    excess_return_ts = rebase_at_x((excess_return + 1).cumprod())
+
+    return excess_return_ts

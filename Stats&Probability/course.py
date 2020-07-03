@@ -6,6 +6,7 @@ import scipy.stats as sc
 from scipy.stats import rv_continuous
 
 from scipy.stats import rv_continuous
+from scipy.stats import hypergeom
 
 
 n = 100
