@@ -161,8 +161,9 @@ a.theoretical = a.theoretical + 1
 a.theoretical = a.theoretical/len(a.index)
 a.plot.scatter('theoretical', 'real')
 plt.show()
-# Cochran's Theorem
 
+
+# Chi squared as an estimate of variance
 n = 3
 dof = n - 1
 trials = 10000
