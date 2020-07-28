@@ -19,7 +19,7 @@ def squeeze_nan(x):
 
 class RollingDecompose:
 
-    def __init__(self, iot, method, st='01-01-2010', st_roll='01-01-2018', last_date_only=False):
+    def __init__(self, iot, method, st='01-01-2010', st_roll='01-01-2019', last_date_only=False, sensibility=0.5):
 
         """
         :param method: str; 'prophet', 'holt-winters'
@@ -42,12 +42,13 @@ class RollingDecompose:
 
         self.method = method
         self.iot = iot.truncate(before=st)
+        self.sensibility = sensibility
         self.trend_strength_dict = {}
         self.surprise_dict = {}
         self.MAPE_dict = {}
 
         if last_date_only:
-            to_iter = [self.iot.loc[pd.to_datetime(st_roll):].index[0]]
+            to_iter = [self.iot.loc[pd.to_datetime(st_roll):].index[-1]]
         else:
             to_iter = self.iot.loc[pd.to_datetime(st_roll):].index
 
@@ -79,7 +80,7 @@ class RollingDecompose:
                 # Apply Facebook Prophet Forecasting Method
                 self.to_fit = iot_flt.reset_index()
                 self.to_fit.columns = ['ds', 'y']
-                self.m = Prophet(seasonality_mode='multiplicative')
+                self.m = Prophet(seasonality_mode='multiplicative', changepoint_prior_scale=self.sensibility)
                 self.m.fit(self.to_fit)
                 future = self.m.make_future_dataframe(periods=10, freq='W')
                 self.forecast = self.m.predict(future)
