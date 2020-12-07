@@ -21,7 +21,6 @@ plot_int_vs_rating = False
 get_spearman = False
 
 aggregations = {'applicationDate': 'count', 'Interest Rate Proposed': 'median', 'fdgRating': 'mean'}
-# todo funnel
 
 # DATA CLEANING
 df_raw.columns = df_raw.iloc[0, :]

@@ -43,7 +43,6 @@ simulation2 = pd.Series(np.random.choice([tail_mul, head_mul], trials))
 simulation1.iloc[0] = 1
 simulation2.iloc[0] = 1
 
-
 fig1, ax1 = plt.subplots()
 simulation1.cumsum().plot(ax=ax1)
 simulation1.cumsum().expanding().mean().plot(ax=ax1)

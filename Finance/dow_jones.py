@@ -1,16 +1,7 @@
 from primitive import *
+
 import statsmodels.api as sm
 import numpy as np
-
-df = pd.read_csv('data_House_Prices_and_Crime_1.csv')
-print(df[df.loc[:, 'index_nsa'] == df.index_nsa.median()])
-
-Y = df.loc[:, 'index_nsa']
-X = df.loc[:, ['Homicides', 'Assaults', 'Robberies']]
-X = sm.add_constant(X)
-model = sm.OLS(Y, X)
-results = model.fit()
-print(results.params)
 
 
 def plot_kurtosis(kurt_original, kurt_reshuffled):
@@ -31,6 +22,7 @@ def plot_kurtosis(kurt_original, kurt_reshuffled):
 
 index_name = 'dow_jones'
 df = get_dow_jones()
+
 dj = df.loc[:, index_name]
 dj_ret = dj.pct_change()
 dj_log_ret = np.log(dj) - np.log(dj.shift(1))
