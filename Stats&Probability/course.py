@@ -434,8 +434,6 @@ for i in range(10000):
     conf_int_down.append(30 / np.sqrt(2 * i))
     conf_int_up.append(-30 / np.sqrt(2 * i))
 
-fig = plt.figure()
-ax1 = fig.add_subplot(111)
 print(mean_l)
 pd.Series(mean_l).plot(ax=ax1)
 pd.Series(conf_int_down).plot(ax=ax1)
@@ -454,8 +452,6 @@ for i in range(100000):
     mean_l.append(mean)
 
 print(pd.Series(mean_l).var())
-
-print('ciao')
 quit()
 
 a = pd.Series(np.random.normal(2, 3, 100000))
