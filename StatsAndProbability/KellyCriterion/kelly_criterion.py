@@ -38,7 +38,7 @@ class KellyCriterion:
         W = pd.DataFrame(capital_evolution_dict)
 
         if graph:
-            fig = plt.figure(1, figsize=(11, 6))
+            fig = plt.figure(1, figsize=(14, 6))
             ax1 = fig.add_subplot(121)
             ax2 = fig.add_subplot(122)
             if len(W.index) > 10:
@@ -65,7 +65,3 @@ class KellyCriterion:
             capital = capital_after_bet
 
         return pd.Series(capital_evolution)
-
-
-kc = KellyCriterion(p=0.5, b=0.11, a=0.1)
-kc.W_as_f_changes()
