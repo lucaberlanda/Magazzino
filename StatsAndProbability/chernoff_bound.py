@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 sns.set_style("whitegrid")
 
 # PARAMETERS
@@ -33,10 +34,9 @@ plt.show()
 
 
 def chernoff_bounds(percentage_distance_from_mean, expected_value):
-
     # the first chernoff bound is for the percentage_distance_from_mean > 0
     chernoff_bound_one = (np.exp(percentage_distance_from_mean) / (
-        (1 + percentage_distance_from_mean) ** (1 + percentage_distance_from_mean))) ** expected_value
+            (1 + percentage_distance_from_mean) ** (1 + percentage_distance_from_mean))) ** expected_value
 
     # the first chernoff bound is for the 0 < percentage_distance_from_mean <= 1
     chernoff_bound_two = 2 * (np.exp((- expected_value * (percentage_distance_from_mean ** 2)) / 3))
@@ -54,7 +54,6 @@ for i, j in zip(pct_dist_from_mean_range, generic_range):
 bounds_evolution = pd.DataFrame(dict_to_store).T
 bounds_evolution.plot()
 plt.show()
-
 
 successes = pd.Series(np.random.binomial(trials, prob_of_success, samples))
 distance_from_exp_value = (successes - expected_value) / expected_value

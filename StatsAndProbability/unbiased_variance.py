@@ -6,7 +6,7 @@ import seaborn as sns
 sns.set_style('white')
 
 
-def why_divide_sample_variance_by_n_minus_one(min_sample_size, max_sample_size, trials=1000,
+def unbiased_variance(min_sample_size, max_sample_size, trials=1000,
                                               plot_sample_st_dev_hist=False):
     expected_sample_stdev_dict = {}
 
@@ -18,8 +18,6 @@ def why_divide_sample_variance_by_n_minus_one(min_sample_size, max_sample_size, 
         mean = simulation.mean()
         sample_std_dev_unbiased = simulation.std()  # Normalized by N - ddof by default
         sample_std_dev_biased = simulation.std(ddof=0)  # Normalized by N - ddof by default
-
-        mean_variance = mean.var()
 
         """MEAN VARIANCE: it is equal to sigma^2 / n (it will start at 0.5 with 2 sample size and 0.33 with 3 sample 
         size and so on...). The sample mean is an estimator of the population mean. It is strongly consistent 
@@ -72,4 +70,4 @@ def why_divide_sample_variance_by_n_minus_one(min_sample_size, max_sample_size, 
     plt.show()
 
 
-why_divide_sample_variance_by_n_minus_one(2, 100, plot_sample_st_dev_hist=False)
+unbiased_variance(2, 100, plot_sample_st_dev_hist=False)

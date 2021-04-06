@@ -3,7 +3,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from pwds import pwd_luca
+from pwds import db_pwd
 from psycopg2 import connect
 from sqlalchemy import create_engine
 
@@ -48,14 +48,16 @@ for j in sample_size:
     print(str(j) + """° trial: """ + str(round(sequence_length_mean, 2)))
     success_rate_list_over_n.append(sequence_length_mean)
 
-aa = pd.Series(success_rate_list_over_n).plot()
+success_rate_to_go = pd.Series(success_rate_list_over_n).plot()
 plt.show()
+
+quit()
 
 conn_psycopg = connect(
     dbname='postgres',
     host='localhost',
     user='postgres',
-    password=pwd_luca)
+    password=db_pwd)
 
 conn = create_engine('postgres', echo=False).connect()
-aa.to_sql('hot_hands_fallacy', conn, if_exists='append')
+success_rate_to_go.to_sql('hot_hands_fallacy', conn, if_exists='append')
