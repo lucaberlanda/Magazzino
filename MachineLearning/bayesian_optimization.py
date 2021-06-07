@@ -18,12 +18,12 @@ pyplot.rcParams["figure.figsize"] = (10, 6)
 
 
 # objective function
-def objective_unimodal(x, noise=0.1):
+def objective(x, noise=0.01):
     noise = normal(loc=0, scale=noise)
     return (x ** 2 * sin(5 * pi * x) ** 6.0) + noise
 
 
-def objective(x, noise=1.5):
+def objective_bimodal(x, noise=1.5):
     noise = normal(loc=0, scale=noise)
     return sin(10 * x) + noise
 
