@@ -14,7 +14,7 @@ ARE = with lim(N → inf) of (V(Std)/(E(Std)^2)) / (V(Mad)/E(Mad)^2)
 
 ARC_list = []
 time_series_length = 100
-time_series_number = 200
+time_series_number = 2000
 df = pd.DataFrame(np.random.randn(time_series_length, time_series_number))
 
 for i in range(10, time_series_number):
@@ -40,4 +40,5 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 ARC_series = pd.Series(ARC_list)
 ARC_series.plot(ax=ax)
+plt.show()
 plt.savefig(join(STORE_DIR, 'asymptotic_relative_efficiency.png'), transparent=True)
