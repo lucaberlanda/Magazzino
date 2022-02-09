@@ -13,17 +13,18 @@ class Blockchain:
     def create_block(self, proof, previous_hash):
         # index, datetime, proof (Nonce?) & previous hash
         block = {'index': len(self.chain) + 1,
-                 'datetime': str(datetime.datetime.now()),
+                 'timestamp': str(datetime.datetime.now()),
                  'proof': proof,
                  'previous_hash': previous_hash
                  }
 
         self.chain.append(block)
+        return block
 
     def get_previous_block(self):
         return self.chain[-1]
 
-    def PoW(self, block, previous_proof):
+    def PoW(self, previous_proof):
         new_proof = 1
         check_proof = False
 
@@ -42,10 +43,10 @@ class Blockchain:
             else:
                 new_proof += 1
 
-        return hash_op, new_proof
+        return new_proof
 
     def hash(self, block):
-        encoded_block = json.dumps(block, sort_keys=True)
+        encoded_block = json.dumps(block, sort_keys=True).encode()
         return hashlib.sha256(encoded_block).hexdigest()
 
     def is_chain_valid(self, chain):
@@ -67,6 +68,23 @@ class Blockchain:
 
 # Part 2 - Mining our Blockchain
 
+# Creating a Blockchain
+blockchain = Blockchain()
+
+def mine_block():
+    previous_block = blockchain.get_previous_block()
+    previous_proof = previous_block['proof']
+    proof = blockchain.PoW(previous_proof)
+    previous_hash = blockchain.hash(previous_block)
+    block = blockchain.create_block(proof, previous_hash)
+
+mine_block()
+mine_block()
+mine_block()
+mine_block()
+print(blockchain.chain)
+print(blockchain.is_chain_valid(blockchain.chain))
+quit()
 # Creating a Web App
 app = Flask(__name__)
 
@@ -87,6 +105,7 @@ def mine_block():
                 'timestamp': block['timestamp'],
                 'proof': block['proof'],
                 'previous_hash': block['previous_hash']}
+
     return jsonify(response), 200
 
 
@@ -108,6 +127,5 @@ def is_valid():
         response = {'message': 'Houston, we have a problem. The Blockchain is not valid.'}
     return jsonify(response), 200
 
-
-# Running the app
+# Running the ap
 app.run(host='0.0.0.0', port=5000)
