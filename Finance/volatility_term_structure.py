@@ -1,3 +1,4 @@
 from Finance.Portfolio.stocks import Stock
 
-risky_ri = Stock(risky_tk).price().loc[:, 'Adj Close']
+rets = Stock(risky_tk).price().loc[:, 'Adj Close'].pct_change()
+print()
