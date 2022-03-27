@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from Finance.Portfolio.stocks import Stock
-from primitive import log_log_plot_with_threshold
 
 
 def get_n_colors(palette='brg', n=3):

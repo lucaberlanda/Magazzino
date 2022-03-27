@@ -32,22 +32,6 @@ def get_dow_jones():
     return df
 
 
-def log_log_plot_with_threshold(s, threshold=0):
-    to_plot = abs(s.dropna()).sort_values(ascending=False).reset_index().iloc[:, 1].reset_index()
-    to_plot.columns = ['p_>_mod_x', 'daily_return']
-    to_plot.loc[:, 'p_>_mod_x'] = (to_plot.loc[:, 'p_>_mod_x'] + 1) / (len(to_plot.index) + 1)
-    to_plot = to_plot[to_plot.daily_return > threshold]
-
-    from Viz.charting import generate_ax
-
-    ax = generate_ax('Visual Identification of Paretianity', '$x$', 'Probability of being > $|x|$')
-    ax.plot(to_plot['daily_return'], to_plot['p_>_mod_x'], 'o', c='blue', alpha=0.5, markeredgecolor='none')
-    ax.set_yscale('log')
-    ax.set_xscale('log')
-    plt.tight_layout()
-    plt.show()
-
-
 def reshuffled_ts(ts):
     ret = ts.pct_change()
     reshuffled_ret = ret.dropna().sample(frac=1)  # default without replacement
