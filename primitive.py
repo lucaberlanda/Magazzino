@@ -55,10 +55,13 @@ def reshuffled_ts(ts):
     return reshuffled_time_s
 
 
-def lagging_kurtosis(ts, max_lag=100):
+def lagging_kurtosis(ts, log_rets=True, max_lag=100):
     kurt_dict = {}
     for days in range(1, max_lag):
-        kurt = ts[::days].pct_change().kurt() + 3  # since it is excess kurtosis
+        if not log_rets:
+            kurt = ts[::days].pct_change().kurt() + 3  # since it is excess kurtosis
+        else:
+            kurt = (np.log(ts[::days]) - np.log(ts[::days].shift(1))).kurt() + 3  # since it is excess kurtosis
         kurt_dict[days] = kurt
     return kurt_dict
 
