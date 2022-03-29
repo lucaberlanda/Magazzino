@@ -17,8 +17,7 @@ def NietszcheDice(cash: float = 0,
                   rolls: int = 300, samples: int = 1000):
     bet = 1 - cash
     adj_returns = cash + bet * np.asarray(returns)
-    roll_sims = np.random.choice(adj_returns,
-                                 size=(rolls, samples)).reshape(-1, rolls)
+    roll_sims = np.random.choice(adj_returns, size=(rolls, samples)).reshape(-1, rolls)
     return roll_sims.cumprod(axis=1)
 
 
