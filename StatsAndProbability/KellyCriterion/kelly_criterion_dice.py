@@ -8,7 +8,6 @@ https://raposa.trade/blog/how-to-gamble-with-demons-and-make-money-doing-it/
 """
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 
@@ -74,28 +73,28 @@ def plot_dice_game(n_traj):
     plt.tight_layout()
     plt.show()
 
+
 n_traj = NietszcheDice()
 plot_dice_game(n_traj)
 
 n_traj = NietszcheDice(cash=0.6)
 plot_dice_game(n_traj)
 
-
 # Optimal tradeoff
 cash_frac = np.linspace(0, 1, 101)[::-1]
-N = 10 # Multiple runs to smooth out the values
+N = 10  # Multiple runs to smooth out the values
 vals5 = np.zeros((len(cash_frac), N))
 vals50 = vals5.copy()
 vals95 = vals5.copy()
 for i in range(N):
-  for j, f in enumerate(cash_frac):
-    traj = NietszcheDice(f)
-    perc5, _ = getQuantilePath(traj, 0.05)
-    perc50, _ = getQuantilePath(traj, 0.5)
-    perc95, _ = getQuantilePath(traj, 0.95)
-    vals5[j, i] += perc5
-    vals50[j, i] += perc50
-    vals95[j, i] += perc95
+    for j, f in enumerate(cash_frac):
+        traj = NietszcheDice(f)
+        perc5, _ = getQuantilePath(traj, 0.05)
+        perc50, _ = getQuantilePath(traj, 0.5)
+        perc95, _ = getQuantilePath(traj, 0.95)
+        vals5[j, i] += perc5
+        vals50[j, i] += perc50
+        vals95[j, i] += perc95
 
 vals5_smooth = vals5.mean(axis=1)
 vals50_smooth = vals50.mean(axis=1)
@@ -119,13 +118,15 @@ plt.semilogy()
 plt.legend()
 plt.show()
 
-def discreteKellyCriterion(x: float, returns: list, probs: list):
-  return np.prod([(1 + b * x)**p for b, p in zip(returns, probs)]) - 1
 
-probs = np.repeat(1/6, 6)
+def discreteKellyCriterion(x: float, returns: list, probs: list):
+    return np.prod([(1 + b * x) ** p for b, p in zip(returns, probs)]) - 1
+
+
+probs = np.repeat(1 / 6, 6)
 returns = [-0.5, 0.05, 0.05, 0.05, 0.05, 0.5]
 g = np.array([discreteKellyCriterion(f, returns, probs)
-  for f in cash_frac])
+              for f in cash_frac])
 g *= 100
 
 plt.figure(figsize=(12, 8))
@@ -143,19 +144,20 @@ returns = np.array([0.5, 1.05, 1.05, 1.05, 1.05, 1.5])
 ins_rets = f * insurance + (1 - f) * returns
 print(f'Mean Returns with Insurance {(ins_rets.mean() - 1) * 100:.1f}%')
 
-ins_gm = (np.power(np.prod(np.power(ins_rets, 50)), 1/300) - 1) * 100
+ins_gm = (np.power(np.prod(np.power(ins_rets, 50)), 1 / 300) - 1) * 100
 print(f'Geometric Mean with Insurance {ins_gm:.1f}%')
 
 
-def NietszcheDiceIns(ins_frac: float=0,
-                     dice_returns: list=[0.5, 1.05, 1.05, 1.05, 1.05, 1.5],
-                     ins_returns: list=[6, 0, 0, 0, 0, 0],
-                     rolls: int=300, samples: int=10000):
-  bet = 1 - ins_frac
-  adj_returns = f * np.asarray(ins_returns) + bet * np.asarray(returns)
-  roll_sims = np.random.choice(adj_returns,
-    size=(rolls, samples)).reshape(-1, rolls)
-  return roll_sims.cumprod(axis=1)
+def NietszcheDiceIns(ins_frac: float = 0,
+                     dice_returns: list = [0.5, 1.05, 1.05, 1.05, 1.05, 1.5],
+                     ins_returns: list = [6, 0, 0, 0, 0, 0],
+                     rolls: int = 300, samples: int = 10000):
+    bet = 1 - ins_frac
+    adj_returns = f * np.asarray(ins_returns) + bet * np.asarray(returns)
+    roll_sims = np.random.choice(adj_returns,
+                                 size=(rolls, samples)).reshape(-1, rolls)
+    return roll_sims.cumprod(axis=1)
+
 
 # With insurance
 ins_frac = 0.09

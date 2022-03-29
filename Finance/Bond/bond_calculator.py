@@ -13,24 +13,34 @@ class Bond:
         variables = {'coupon': solve_for if self.coupon is None else self.coupon,
                      'ytm': solve_for if self.ytm is None else self.ytm,
                      'price': solve_for if self.price is None else self.price,
-                     'years': self.years}
+                     'years': self.years,
+                     'face_value': solve_for if self.face_value is None else self.face_value}
 
-        cfs = [(variables['coupon'] * self.face_value) / (1 + variables['ytm']) ** cnt for cnt in
+        cfs = [(variables['coupon'] * variables['face_value']) / (1 + variables['ytm']) ** cnt for cnt in
                range(1, variables['years'] + 1)]
 
-        notional = self.face_value / (1 + variables['ytm']) ** variables['years']
+        notional = variables['face_value'] / (1 + variables['ytm']) ** variables['years']
         cfs.append(notional)
         to_minimize = variables['price'] - sum(cfs)
         return to_minimize
 
-    def compute_yield(self):
+    def get_metrics(self):
+        # todo init value as f(missing_value)
+        init_value = 0.0
         res = newton(
             self.cashflow,
-            0.03,
+            init_value,
             tol=1e-11)
 
         return res
 
 
-bond = Bond(face_value=100, coupon=0.03, years=10, price=200, ytm=None)
-print(bond.compute_yield())
+if __name__ == '__main__':
+
+    bond = Bond(face_value=100,
+                coupon=0.03,
+                years=10,
+                price=None,
+                ytm=0.04)
+
+    print(bond.get_metrics())
