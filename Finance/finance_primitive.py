@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 from fbm import fbm
 
+
 def autocorr(ts, lookback, holdingdays, graph=False):
     """
     :param ts,
     :param lookback
-    :param holdingdays
+    :param holding days
     :param plt=False
     """
 
@@ -31,40 +32,43 @@ def autocorr(ts, lookback, holdingdays, graph=False):
 
     return correlation, pvalue
 
-import numpy as np
-import pandas as pd
 
+class GBM:
+    def __init__(self, S0, mu, sigma, T, I):
+        self.S0 = S0
+        self.mu = mu
+        self.sigma = sigma
+        self.T = T
+        self.I = I
 
-def BrownianMotion(S0, mu, sigma, T, I):
-    paths = np.zeros((T + 1, I), np.float64)
-    paths[0] = S0
+    def get_paths(self):
+        paths = np.zeros((self.T + 1, self.I), np.float64)
+        paths[0] = self.S0
 
-    for t in range(1, T + 1):
-        rand = np.random.standard_normal(I)
-        paths[t] = paths[t - 1] * np.exp((mu - 0.5 * sigma ** 2) * 1 +
-                                         sigma * np.sqrt(1) * rand)
+        for t in range(1, self.T + 1):
+            rand = np.random.standard_normal(self.I)
+            paths[t] = paths[t - 1] * np.exp((self.mu - 0.5 * self.sigma ** 2) * 1 +
+                                             self.sigma * np.sqrt(1) * rand)
 
-    return pd.DataFrame(paths)
+        return pd.DataFrame(paths)
 
+    def ensemble_average(self):
+        paths = np.zeros((self.T + 1), np.float64)
+        paths[0] = self.S0
 
-def BrownianMotionEnsembleAverage(S0, mu, T):
-    paths = np.zeros((T + 1), np.float64)
-    paths[0] = S0
+        for t in range(1, self.T + 1):
+            rand = 0
+            paths[t] = paths[t - 1] * np.exp(self.mu)
 
-    for t in range(1, T + 1):
-        rand = 0
-        paths[t] = paths[t - 1] * np.exp(mu)
+        return pd.DataFrame(paths)
 
-    return pd.DataFrame(paths)
+    def time_average(self):
+        paths = np.zeros((self.T + 1), np.float64)
+        paths[0] = self.S0
 
+        for t in range(1, self.T + 1):
+            rand = 0
+            paths[t] = paths[t - 1] * np.exp((self.mu - 0.5 * self.sigma ** 2) * 1 +
+                                             self.sigma * np.sqrt(1) * rand)
 
-def BrownianMotionTimeAverage(S0, mu, sigma, T):
-    paths = np.zeros((T + 1), np.float64)
-    paths[0] = S0
-
-    for t in range(1, T + 1):
-        rand = 0
-        paths[t] = paths[t - 1] * np.exp((mu - 0.5 * sigma ** 2) * 1 +
-                                         sigma * np.sqrt(1) * rand)
-
-    return pd.DataFrame(paths)
+        return pd.DataFrame(paths)
