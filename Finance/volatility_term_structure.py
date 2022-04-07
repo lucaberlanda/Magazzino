@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from Finance.Portfolio.stocks import Stock
 
 
-def vol_term_structure(ri)En:
+def vol_term_structure(ri):
     std_dict = {}
     theoretical_std_dict = {}
     first_std = ri.pct_change().std()
