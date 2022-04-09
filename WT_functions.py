@@ -81,7 +81,7 @@ def single_commodity_optimal_contract(df, volume_threshold=3e7, oi_threshold=1e8
     return df, chosen_contracts, price_df_comm, w_df
 
 
-def backtest_strategy(prices, w):
+def backtest_strategy(prices, w, rebalancing='monthly'):
     w = w.copy()
     prices = prices.copy()
 
@@ -92,9 +92,16 @@ def backtest_strategy(prices, w):
     w.columns = ['_'.join(map(str, x)) for x in w.columns]
     prices.columns = ['_'.join(map(str, x)) for x in prices.columns]
 
-    weights_at_reb_dt = w.resample('BM').last().fillna(0).copy()
-    idx_cls = IndexConstruction(prices, weights_at_reb_dt.T, name='strategy', rebalancing_f='weights')
-    idx_cls.get_index()
+    if rebalancing == 'monthly':
+        weights_at_reb_dt = w.resample('BM').last().fillna(0).copy()
+        idx_cls = IndexConstruction(prices, weights_at_reb_dt.T, name='strategy', rebalancing_f='weights')
+        idx_cls.get_index()
+    elif rebalancing == 'daily':
+        idx_cls = IndexConstruction(prices, w.T, name='strategy', rebalancing_f='daily')
+        idx_cls.get_index()
+    else:
+        raise KeyError('Rebalancing string not valid!')
+
     return idx_cls, idx_cls.idx
 
 
@@ -144,7 +151,7 @@ def plot_future_curve_and_roll_yield(commodity_at_dt):
 
 class IndexConstruction:
 
-    def __init__(self, ris, w, name='idx', rescale_w=True, rebalancing_f='daily', fees=0, shift_periods=1):
+    def __init__(self, ris, w, name='idx', rescale_w=True, rebalancing_f='daily', shift_periods=1):
 
         """
         Index Construction
@@ -262,14 +269,10 @@ def rebase_at_xs(ri, at):
     multiple_dts = at.columns
     df_dict = {}
     ri_reb = ri.copy()
-    ri_reb = ri_reb.reindex(at.index.get_level_values(0).tolist(), axis=1)
-    ri_reb.loc[:, ri_reb.isna().all()] = 100
+    ri_reb = ri_reb.reindex(at.index.get_level_values(0).tolist(), axis=1).ffill()
+    # ri_reb.loc[:, ri_reb.isna().all()] = 100
 
     for i in np.arange(len(multiple_dts)):
-        at_dt = at.loc[:, multiple_dts[i]]
-        if len(at.index.names) == 2 and 'daily' in at_dt.index.get_level_values(1).tolist():
-            to_rescale = at_dt.xs('daily', level=1)
-            w_to_rescale = to_rescale.sum()
 
         if i == 0:
             df = ri_reb.loc[:multiple_dts[i + 1], :].iloc[1:, :].dropna(how='all', axis=1)
@@ -278,17 +281,7 @@ def rebase_at_xs(ri, at):
         else:
             df = ri_reb.loc[multiple_dts[i]:multiple_dts[i + 1], :].iloc[1:, :].dropna(how='all', axis=1)
 
-        if len(at.index.names) < 2:
-            df_dict[i] = df.apply(lambda x: x / x.dropna().values.tolist()[0] * at.loc[x.name, multiple_dts[i]])
-        else:
-            df_before_resc = df.apply(lambda x: x / x.dropna().values.tolist()[0]
-                                                * at.reset_index(1, True).loc[x.name, multiple_dts[i]])
-
-            df_before_resc.loc[:, to_rescale.index] = to_rescale.to_frame().T.reindex(ri_reb.index).ffill().loc[
-                                                      df_before_resc.index, :].mul(df_before_resc.loc[:,
-                                                                                   to_rescale.index].sum(1),
-                                                                                   0) / w_to_rescale
-            df_dict[i] = df_before_resc
+        df_dict[i] = df.apply(lambda x: x / x.dropna().values.tolist()[0] * at.loc[x.name, multiple_dts[i]])
 
     df_to_go = pd.concat(df_dict)
     df_to_go.index = df_to_go.index.droplevel()
