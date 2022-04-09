@@ -48,21 +48,21 @@ else:
     price_df = pd.read_pickle('price_df')
 
 codes = df.contract_code.unique()
+empty_contracts = weights.sum()[weights.sum() == 0].index
+price_df = price_df.drop(empty_contracts, axis=1)
+weights = weights.drop(empty_contracts, axis=1)
+
 ts_dict = {}
 for cd in codes:
    print('Backtest Strategy For Single Commodity: {}'.format(cd))
    price_df_single = price_df.loc[:, cd]
    weights_single = weights.loc[:, cd]
-   strategy_class, strategy_ts = backtest_strategy(prices=price_df_single, w=weights_single)
+   strategy_class, strategy_ts = backtest_strategy(prices=price_df_single, w=weights_single, rebalancing='monthly')
    ts_dict[cd] = strategy_ts
 
 print('Backtest Full Strategy')
-ptf_class, ptf_ts = backtest_strategy(prices=price_df, w=weights, )
+ptf_class, ptf_ts = backtest_strategy(prices=price_df, w=weights, rebalancing='monthly')
 ts_dict['portfolio'] = ptf_ts
-
-empty_contracts = weights.sum()[weights.sum() == 0].index
-price_df = price_df.drop(empty_contracts, axis=1)
-weights = weights.drop(empty_contracts, axis=1)
 
 fig = plt.figure(figsize=(12, 8))
 ax = fig.add_subplot(1, 1, 1)

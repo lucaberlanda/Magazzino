@@ -169,8 +169,8 @@ class IndexConstruction:
         self.ris = ris
         self.name = name
         self.rescale_w = rescale_w
-        self.shift_periods = shift_periods
         self.rebalancing_f = rebalancing_f
+        self.shift_periods = shift_periods
 
         self.rets = ris.pct_change()
 
@@ -186,17 +186,7 @@ class IndexConstruction:
         self.idx.name = self.name
 
     def get_weights(self):
-        if self.rebalancing_f == 'simple':
-            if type(self.w) == pd.Series:
-                w_df_raw = self.w.to_frame().shift(self.shift_periods)
-            else:
-                w_df_raw = self.w.shift(self.shift_periods)
-
-            w_df_raw = w_df_raw.reindex(self.ris.index).ffill().dropna()
-            if type(self.ris) == pd.Series:
-                self.ris = self.ris.to_frame()
-
-        elif self.rebalancing_f == 'daily':
+        if self.rebalancing_f == 'daily':
             if type(self.w) == pd.Series:
                 w_df_raw = pd.DataFrame(zip(*[self.w] * len(self.ris.index)),
                                         index=self.ris.columns, columns=self.ris.index).T
@@ -218,9 +208,7 @@ class IndexConstruction:
             self.w_df = w_df_raw
 
     def plot_weights(self, heatmap=False):
-
         if heatmap:
-
             import seaborn as sns
             import matplotlib.dates as mdates
             fig = plt.figure(figsize=(12, 7))
