@@ -123,3 +123,7 @@ plt.show()
 # todo check sizes
 # missing dates in w
 print(pd.Series(list(set(price_df.index) - set(weights.index))).sort_values())
+
+
+# check missing business days
+pd.bdate_range(start = i[1].index[0], end = i[1].index[-1] ).difference(i[1].index)
