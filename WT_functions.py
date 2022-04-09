@@ -3,10 +3,66 @@ import pandas as pd
 import os.path as pth
 import matplotlib.pyplot as plt
 
+from time import time
+from functools import wraps
 
-def plot_single_contract(df, code, m, y):
-    single_contract = df[(df.contract_code == code) & (df.mat_month == m) & (df.mat_year == y)]
-    single_contract.close.plot()
+
+def timing(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time()
+        result = f(*args, **kw)
+        te = time()
+        print('func:%r args:[%r, %r] took: %2.4f sec' % (f.__name__, args, kw, te - ts))
+        return result
+
+    return wrap
+
+
+@timing
+def get_and_tidy_up_data(filename='contracts_prices.csv', filename_info='contracts_info.csv'):
+    filepath = pth.join(pth.join('Other', 'WisdomTree'), filename)
+    filepath_info = pth.join(pth.join('Other', 'WisdomTree'), filename_info)
+
+    df = pd.read_csv(filepath).set_index('date')
+    df_info = pd.read_csv(filepath_info).set_index('contract_code')
+    names_mapping = df_info.contract_short_name.to_dict()
+    df.index = pd.to_datetime(df.index, format='%d/%m/%Y')
+    df.loc[:, 'last_trade_date'] = pd.to_datetime(df['last_trade_date'], format='%d/%m/%Y')
+
+    df = df.reset_index().sort_values(['date', 'mat_year', 'mat_month'],
+                                      ascending=[True, False, False]).set_index('date')
+
+    df = df.merge(df_info, left_on='contract_code', right_index=True)
+
+    # we define the value of the contract by multiplying the current price by the size of the contract
+    df['value_USD'] = df.close.mul(df.contract_size)
+    df['oi_USD'] = df.oi.mul(df.value_USD).fillna(0)
+    df['volume_USD'] = df.volume.mul(df.value_USD).fillna(0)
+
+    lbls = ['contract_code', 'mat_month', 'mat_year']
+    # calculate the 22 days moving average (business days to get one full month moving average) and append as a column
+    volume_ma = df.groupby(lbls)['volume_USD'].rolling(window=22, min_periods=1).mean()
+    df = df.set_index(lbls, append=True).join(volume_ma, rsuffix='_1M_MA').reset_index().set_index('date')
+    return df, names_mapping
+
+
+def plot_contract(what, df, code, m, y, names_dict):
+    """
+    :param what: str;
+    :param df: pd.DataFrame;
+    :param code: str;
+    :param m: int; month
+    :param y: int; year
+    :param names_dict; dict to map codes to commodity names
+    """
+
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(1, 1, 1)
+    contracts = df[(df.contract_code == code) & (df.mat_month.isin(m)) & (df.mat_year.isin(y))]
+    lbls = ['contract_code', 'mat_month', 'mat_year']
+    contracts.set_index(lbls, append=True).loc[:, what].unstack(lbls).plot(ax=ax, cmap='brg')
+    ax.set_title('{} - {} Futures Plot'.format(names_dict[code], what))
     plt.show()
 
 

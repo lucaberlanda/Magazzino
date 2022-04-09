@@ -3,33 +3,6 @@ import pandas as pd
 import os.path as pth
 import matplotlib.pyplot as plt
 from WT_functions import IndexConstruction
-from WT_functions import plot_single_contract
-
-filename = 'contracts_prices.csv'
-filename_info = 'contracts_info.csv'
-filepath = pth.join(pth.join('Other', 'WisdomTree'), filename)
-filepath_info = pth.join(pth.join('Other', 'WisdomTree'), filename_info)
-from time import time
-
-df = pd.read_csv(filepath).set_index('date')
-df_info = pd.read_csv(filepath_info).set_index('contract_code')
-df.index = pd.to_datetime(df.index, format='%d/%m/%Y')
-df.loc[:, 'last_trade_date'] = pd.to_datetime(df['last_trade_date'], format='%d/%m/%Y')
-
-df = df.reset_index().sort_values(['date', 'mat_year', 'mat_month'],
-                                  ascending=[True, False, False]).set_index('date')
-
-df = df.merge(df_info, left_on='contract_code', right_index=True)
-
-# we define the value of the contract by multiplying the current price by the size of the contract
-df['value_USD'] = df.close.mul(df.contract_size)
-df['oi_USD'] = df.oi.mul(df.value_USD).fillna(0)
-df['volume_USD'] = df.volume.mul(df.value_USD).fillna(0)
-
-lbls = ['contract_code', 'mat_month', 'mat_year']
-# calculate the 22 days moving average (business days to get one full month moving average) and append as a column
-volume_ma = df.groupby(lbls)['volume_USD'].rolling(window=22, min_periods=1).mean()
-df = df.set_index(lbls, append=True).join(volume_ma, rsuffix='_1M_MA').reset_index().set_index('date')
 
 
 def single_commodity_optimal_contract(df, volume_threshold=3e7, oi_threshold=1e8):
@@ -83,8 +56,13 @@ def backtest_strategy(prices, w):
     return idx_cls, idx_cls.idx
 
 
+from WT_functions import get_and_tidy_up_data, plot_contract
+
+df, names_mapping = get_and_tidy_up_data(filename='contracts_prices.csv', filename_info='contracts_info.csv')
 codes = df.contract_code.unique()
 
+plot_contract(df, 'NG', [6, 7, 8, 9, 10], [2020], names_mapping)
+quit()
 # initialize dictionaries
 price_df_dict = {}
 weights_dict = {}
@@ -124,6 +102,5 @@ plt.show()
 # missing dates in w
 print(pd.Series(list(set(price_df.index) - set(weights.index))).sort_values())
 
-
 # check missing business days
-pd.bdate_range(start = i[1].index[0], end = i[1].index[-1] ).difference(i[1].index)
+pd.bdate_range(start=i[1].index[0], end=i[1].index[-1]).difference(i[1].index)
