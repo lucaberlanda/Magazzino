@@ -47,6 +47,57 @@ def get_and_tidy_up_data(filename='contracts_prices.csv', filename_info='contrac
     return df, names_mapping
 
 
+def single_commodity_optimal_contract(df, volume_threshold=3e7, oi_threshold=1e8):
+    df_grouped = df.reset_index().groupby(['date', 'contract_code'])
+    delta_days = df_grouped['last_trade_date'].diff().abs().dt.days.shift(-1)
+    delta_days.index = df.index
+    df.loc[:, 'delta_days'] = delta_days
+    # divide the days between two contracts by 30 as representative of month #days
+    df.loc[:, 'delta_months'] = delta_days / 30
+
+    roll_yield_raw = df_grouped['close'].pct_change().shift(-1)
+    roll_yield_raw.index = df.index
+    df.loc[:, 'roll_yield_raw'] = roll_yield_raw
+    df.loc[:, 'roll_yield'] = df['roll_yield_raw'].div(df['delta_months'])
+
+    df_flt = df[(df.volume_USD_1M_MA > volume_threshold) & (df.oi_USD > oi_threshold)]
+    chosen_idx = list(
+        df_flt.reset_index().groupby(['date', 'contract_code'])['roll_yield'].idxmax().dropna().values.astype(int))
+
+    chosen_contracts = df_flt.reset_index().iloc[chosen_idx].set_index('date')
+
+    cols = ['contract_code', 'mat_month', 'mat_year']
+    price_df_comm = df.set_index(cols, append=True).loc[:, 'close'].unstack(cols)
+    # sort the columns properly
+    price_df_comm.sort_index(level='mat_year', axis=1, inplace=True)
+
+    w_df_mask = ~chosen_contracts.set_index(cols, append=True).loc[:, 'close'].unstack(cols).isnull()
+    w_df = w_df_mask.astype(float)  # convert bool for chosen contract in a float
+
+    # make sure that the weight matrix and price matrix have same indexes
+    w_df = w_df.reindex(price_df_comm.index).reindex(price_df_comm.columns, axis=1)
+    w_df_mask = w_df_mask.reindex(price_df_comm.index).reindex(price_df_comm.columns, axis=1)
+
+    return df, chosen_contracts, price_df_comm, w_df
+
+
+def backtest_strategy(prices, w):
+    w = w.copy()
+    prices = prices.copy()
+
+    w.columns = w.columns.droplevel(0)
+    prices.columns = prices.columns.droplevel(0)
+
+    # create single level column to pass the DataFrame
+    w.columns = ['_'.join(map(str, x)) for x in w.columns]
+    prices.columns = ['_'.join(map(str, x)) for x in prices.columns]
+
+    weights_at_reb_dt = w.resample('BM').last().fillna(0).copy()
+    idx_cls = IndexConstruction(prices, weights_at_reb_dt.T, name='strategy', rebalancing_f='weights')
+    idx_cls.get_index()
+    return idx_cls, idx_cls.idx
+
+
 def plot_contract(what, df, code, m, y, names_dict):
     """
     :param what: str;
@@ -66,14 +117,27 @@ def plot_contract(what, df, code, m, y, names_dict):
     plt.show()
 
 
-def plot_future_curve_and_roll_yield(commodity_at_dt, dt):
+def plot_future_curve_and_roll_yield(commodity_at_dt):
+    """
+
+    :param commodity_at_dt: pd.DataFrame; specific commodity df at a specific date
+    :return:
+    """
+
+    dt = commodity_at_dt.index[0]
+    code = commodity_at_dt.contract_code.values[0]
+    commodity_last_trade_dt = commodity_at_dt.loc[commodity_at_dt.index[0]].set_index('last_trade_date').sort_index()
+    max_roll_yield = commodity_last_trade_dt.loc[[commodity_last_trade_dt.roll_yield.idxmax()], ['roll_yield']]
     fig = plt.figure(1, figsize=(10, 6))
     ax1 = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
-    aa = commodity_at_dt.loc[commodity_at_dt.index[0]].set_index('last_trade_date').sort_index()
-    aa.close.plot(ax=ax1, title='{} Futures Curve at {}'.format(code, dt.strftime('%Y-%m-%d')))
-    aa.roll_yield.plot(ax=ax2, title='Roll Yield')
+
+    commodity_last_trade_dt.close.plot(ax=ax1, title='{} Futures Curve at {}'.format(code, dt.strftime('%Y-%m-%d')))
+    commodity_last_trade_dt.roll_yield.plot(ax=ax2, title='Roll Yield')
+    max_roll_yield.plot(ax=ax2, linewidth=0, marker='o', color='red')
+
     ax2.axhline(0, linewidth=1, linestyle='dashed', color='black')
+
     plt.tight_layout()
     plt.show()
 
