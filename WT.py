@@ -17,6 +17,8 @@ plot_stuff = False
 df, names_mapping = get_and_tidy_up_data(filename='contracts_prices.csv',
                                          filename_info='contracts_info.csv')
 
+# df = df[df.contract_code.isin(['CL', 'C'])]
+
 if plot_stuff:
     fig1 = plot_contract('volume_USD', df, 'NG', [6, 7, 8, 9, 10, 11], [2020], names_mapping, return_fig=True)
     plt.savefig('volume_USD.png', transparent=True)
@@ -72,17 +74,24 @@ if part_two:
 
     ts_dict = {}
 
-    #for cd in codes:
-    #    print('Backtest Strategy For Single Commodity: {}'.format(cd))
-    #    price_df_single = price_df.loc[:, cd]
-    #    weights_single = weights.loc[:, cd]
-    #    strategy_class, strategy_ts = backtest_strategy(prices=price_df_single,
-    #                                                    w=weights_single,
-    #                                                    rebalancing='monthly')
-    #    ts_dict[cd] = strategy_ts
+    for cd in codes:
+        print('Backtest Strategy For Single Commodity: {}'.format(cd))
+        price_df_single = price_df.loc[:, cd]
+        weights_single = weights.loc[:, cd]
+        strategy_class, strategy_ts = backtest_strategy(prices=price_df_single,
+                                                        w=weights_single,
+                                                        rebalancing='monthly')
+        ts_dict[cd] = strategy_ts
 
     print('Backtest Full Strategy')
-    ptf_class, ptf_ts = backtest_strategy(prices=price_df, w=weights, rebalancing='monthly')
+
+    # ptf_class, ptf_ts = backtest_strategy(prices=price_df, w=weights, rebalancing='monthly')
+    # ts_dict['portfolio'] = ptf_ts
+
+    full_comm_df = pd.concat(ts_dict, axis=1)
+    full_comm_w = pd.DataFrame(1, full_comm_df.index, full_comm_df.columns).resample('BM').first()
+    full_comm_w = full_comm_w.div(full_comm_w.sum(axis=1), axis=0)
+    ptf_class, ptf_ts = backtest_strategy(prices=full_comm_df, w=full_comm_w, rebalancing='monthly', all_comm=True)
     ts_dict['portfolio'] = ptf_ts
 
     full_df = rebase_at_x(pd.concat(ts_dict, axis=1))
@@ -91,13 +100,8 @@ if part_two:
     full_df.to_excel('backtest_levels.xlsx')
 
 else:
-    full_df = pd.read_excel('backtest_levels.xlsx')
+    full_df = pd.read_excel('backtest_levels.xlsx').set_index('date')
 
-quit()
-#  Stats computation and export
-stats = Stats(full_df.pct_change())
-summary_stats = stats.summary_stats()
-summary_stats.to_csv('stats.csv')
 
 # plot strategy
 fig = plt.figure(figsize=(12, 8))
@@ -106,6 +110,15 @@ full_df.loc[:, 'portfolio'].plot(color='black', ax=ax, legend=True)
 full_df.drop('portfolio', axis=1).rename(names_mapping, axis=1).plot(cmap='brg', ax=ax, alpha=0.5, linewidth=1)
 ax.set_title('Portfolio vs. Single Commodities', fontsize=20)
 plt.savefig('backtest_levels.png', transparent=True)
+plt.show()
+quit()
+print()
+
+#  Stats computation and export
+stats = Stats(full_df.pct_change())
+summary_stats = stats.summary_stats()
+summary_stats.to_csv('stats.csv')
+
 
 # Maximum Weight Plot
 fig = plt.figure(figsize=(15, 7))

@@ -90,16 +90,17 @@ def single_commodity_optimal_contract(df, volume_threshold=3e7, oi_threshold=1e8
     return df, chosen_contracts, price_df_comm, w_df
 
 
-def backtest_strategy(prices, w, rebalancing='monthly'):
+def backtest_strategy(prices, w, rebalancing='monthly', all_comm=False):
     w = w.copy()
     prices = prices.copy()
 
-    w.columns = w.columns.droplevel(0)
-    prices.columns = prices.columns.droplevel(0)
+    if not all_comm:
+        w.columns = w.columns.droplevel(0)
+        prices.columns = prices.columns.droplevel(0)
 
-    # create single level column to pass the DataFrame
-    w.columns = ['_'.join(map(str, x)) for x in w.columns]
-    prices.columns = ['_'.join(map(str, x)) for x in prices.columns]
+        # create single level column to pass the DataFrame
+        w.columns = ['_'.join(map(str, x)) for x in w.columns]
+        prices.columns = ['_'.join(map(str, x)) for x in prices.columns]
 
     if rebalancing == 'monthly':
         weights_at_reb_dt = w.resample('BMS').first().fillna(0).copy()
