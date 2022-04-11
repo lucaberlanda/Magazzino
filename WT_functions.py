@@ -7,15 +7,6 @@ from time import time
 from functools import wraps
 
 
-def fillna_downbet(df):
-    df = df.copy()
-    for col in df:
-        non_nans = df[col][~df[col].apply(np.isnan)]
-        start, end = non_nans.index[0], non_nans.index[-1]
-        df[col].loc[start:end] = df[col].loc[start:end].fillna(method='ffill')
-    return df
-
-
 def timing(f):
     @wraps(f)
     def wrap(*args, **kw):
@@ -61,14 +52,17 @@ def single_commodity_optimal_contract(df, volume_threshold=3e7, oi_threshold=1e8
     delta_days = df_grouped['last_trade_date'].diff().abs().dt.days.shift(-1)
     delta_days.index = df.index
     df.loc[:, 'delta_days'] = delta_days
+
     # divide the days between two contracts by 30 as representative of month #days
     df.loc[:, 'delta_months'] = delta_days / 30
 
+    # compute roll yield
     roll_yield_raw = df_grouped['close'].pct_change().shift(-1)
     roll_yield_raw.index = df.index
     df.loc[:, 'roll_yield_raw'] = roll_yield_raw
     df.loc[:, 'roll_yield'] = df['roll_yield_raw'].div(df['delta_months'])
 
+    # filter for Open interest and Volume
     df_flt = df[(df.volume_USD_1M_MA > volume_threshold) & (df.oi_USD > oi_threshold)]
     chosen_idx = list(
         df_flt.reset_index().groupby(['date', 'contract_code'])['roll_yield'].idxmax().dropna().values.astype(int))
@@ -77,6 +71,7 @@ def single_commodity_optimal_contract(df, volume_threshold=3e7, oi_threshold=1e8
 
     cols = ['contract_code', 'mat_month', 'mat_year']
     price_df_comm = df.set_index(cols, append=True).loc[:, 'close'].unstack(cols)
+
     # sort the columns properly
     price_df_comm.sort_index(level='mat_year', axis=1, inplace=True)
 
@@ -85,12 +80,11 @@ def single_commodity_optimal_contract(df, volume_threshold=3e7, oi_threshold=1e8
 
     # make sure that the weight matrix and price matrix have same indexes
     w_df = w_df.reindex(price_df_comm.index).reindex(price_df_comm.columns, axis=1)
-    w_df_mask = w_df_mask.reindex(price_df_comm.index).reindex(price_df_comm.columns, axis=1)
 
     return df, chosen_contracts, price_df_comm, w_df
 
 
-def backtest_strategy(prices, w, rebalancing='monthly', all_comm=False):
+def backtest_strategy(prices, w, all_comm=False):
     w = w.copy()
     prices = prices.copy()
 
@@ -102,21 +96,10 @@ def backtest_strategy(prices, w, rebalancing='monthly', all_comm=False):
         w.columns = ['_'.join(map(str, x)) for x in w.columns]
         prices.columns = ['_'.join(map(str, x)) for x in prices.columns]
 
-    if rebalancing == 'monthly':
-        weights_at_reb_dt = w.resample('BMS').first().fillna(0).copy()
+        weights_at_reb_dt = w.resample('BMS').first().fillna(0).reindex(prices.index).ffill().bfill()
         idx_cls = IndexConstruction(prices,
                                     weights_at_reb_dt.T,
                                     name='strategy',
-                                    rebalancing_f='weights',
-                                    shift_periods=0)
-        idx_cls.get_index()
-
-    elif rebalancing == 'daily':
-        weights_at_reb_dt = w.resample('BMS').last().fillna(0).copy()
-        idx_cls = IndexConstruction(prices,
-                                    weights_at_reb_dt.T,
-                                    name='strategy',
-                                    rebalancing_f='daily',
                                     shift_periods=0)
         idx_cls.get_index()
 
@@ -127,13 +110,15 @@ def backtest_strategy(prices, w, rebalancing='monthly', all_comm=False):
 
 
 def plot_contract(what, df, code, m, y, names_dict, return_fig=False):
+
     """
-    :param what: str;
+    :param what: str; quantity to plot
     :param df: pd.DataFrame;
-    :param code: str;
+    :param code: str; code of the commodity
     :param m: int; month
     :param y: int; year
     :param names_dict; dict to map codes to commodity names
+    :param return_fig: bool; if we want to return the fig or just show it
     """
 
     fig = plt.figure(figsize=(10, 7))
@@ -160,7 +145,7 @@ def plot_contract(what, df, code, m, y, names_dict, return_fig=False):
 def plot_future_curve_and_roll_yield(commodity_at_dt, return_fig=False):
     """
     :param commodity_at_dt: pd.DataFrame; specific commodity df at a specific date
-    :return:
+    :param return_fig: bool; if we want to return the fig or just show it
     """
     dt = commodity_at_dt.index[0]
     code = commodity_at_dt.contract_code.values[0]
@@ -186,17 +171,12 @@ def plot_future_curve_and_roll_yield(commodity_at_dt, return_fig=False):
 
 class IndexConstruction:
 
-    def __init__(self, ris, w, name='idx', rescale_w=True, rebalancing_f='daily', shift_periods=1):
+    def __init__(self, ris, w, name='idx', rescale_w=True, shift_periods=1):
 
         """
         Index Construction
         :param ris: pandas DataFrame;
         :param w: pandas DataFrame; instrument weights should be on the index, dates in the column;
-        :param rebalancing_f: str; it can be:
-            - 'daily': the portfolio is rebalanced daily. The weights can be a Series or  a DataFrame
-            - 'weights': the portfolio is rebalanced according to the dates and weights given by self.w, i.e.
-                the portfolio is allowed to drift;
-
         :param shift_periods: int; number of periods that the weights should be shifted of. Default = 1.
         """
 
@@ -204,7 +184,6 @@ class IndexConstruction:
         self.ris = ris
         self.name = name
         self.rescale_w = rescale_w
-        self.rebalancing_f = rebalancing_f
         self.shift_periods = shift_periods
 
         self.rets = ris.pct_change()
@@ -214,6 +193,7 @@ class IndexConstruction:
         self.w_rets = None
 
     def get_index(self):
+
         self.get_weights()
         self.w_rets = self.w_df.mul(self.ris.pct_change())
         daily_rets = self.w_rets.sum(axis=1)
@@ -221,58 +201,39 @@ class IndexConstruction:
         self.idx.name = self.name
 
     def get_weights(self):
-        if self.rebalancing_f == 'daily':
-            if type(self.w) == pd.Series:
-                w_df_raw = pd.DataFrame(zip(*[self.w] * len(self.ris.index)),
-                                        index=self.ris.columns, columns=self.ris.index).T
 
-                w_df_raw = w_df_raw.fillna(0).reindex(self.ris.index).ffill().shift(self.shift_periods)
-            else:
-                w_df_raw = self.w.T.fillna(0).reindex(self.ris.index).ffill().bfill().shift(self.shift_periods)
+        w_df_raw = self.w.T.fillna(0).reindex(self.ris.index).ffill().bfill().shift(self.shift_periods)
 
-        elif self.rebalancing_f == 'weights':
-            w_at_reb_dts = self.w.fillna(0)
-            w_df_raw = rebase_at_xs(self.ris.truncate(before=w_at_reb_dts.columns[0]), w_at_reb_dts)
-
-        else:
-            raise KeyError('self.rebalancing_f is not valid!')
-
-        if self.rescale_w and self.rebalancing_f != 'simple':
+        if self.rescale_w:
             self.w_df = w_df_raw.div(w_df_raw.sum(axis=1), axis=0)
         else:
             self.w_df = w_df_raw
 
-    def plot_weights(self, heatmap=False):
-        if heatmap:
-            import seaborn as sns
-            import matplotlib.dates as mdates
-            fig = plt.figure(figsize=(12, 7))
-            ax = fig.add_subplot(1, 1, 1)
-            to_plot = self.w_df.dropna(how='all')
-            sns.heatmap(to_plot, ax=ax, cmap='viridis')
-            years = mdates.YearLocator()  # every year
-            years_fmt = mdates.DateFormatter('%Y')
-            ax.xaxis.set_major_locator(years)
-            ax.xaxis.set_major_formatter(years_fmt)
-            fig.autofmt_xdate()
-            plt.show()
+    def plot_weights(self, return_fig=False):
+        """
+        Plot the weights as heatmap
+        :param return_fig: bool
+        :return:
+        """
 
-        else:
-            fig, ax = plt.subplots()
-            self.w_df.dropna(how='all').plot(figsize=(8, 6),
-                                             stacked=True,
-                                             cmap='viridis',
-                                             ax=ax, linewidth=0.9, legend=False)
+        import seaborn as sns
+        import matplotlib.dates as mdates
 
-            ax.set_title('Weights Evolution', fontsize=15)
-
-            if len(self.w_df.columns) > 10:
-                ax.legend(fontsize=10).set_visible(False)
-            else:
-                ax.legend(fontsize=10)
-
+        fig = plt.figure(figsize=(12, 7))
+        ax = fig.add_subplot(1, 1, 1)
+        to_plot = self.w_df.dropna(how='all')
+        sns.heatmap(to_plot, ax=ax, cmap='viridis')
+        years = mdates.YearLocator()  # every year
+        years_fmt = mdates.DateFormatter('%Y')
+        ax.xaxis.set_major_locator(years)
+        ax.xaxis.set_major_formatter(years_fmt)
+        fig.autofmt_xdate()
         plt.tight_layout()
-        plt.show()
+
+        if return_fig:
+            return fig
+        else:
+            plt.show()
 
 
 def rebase_at_x(df, at=100):
@@ -282,33 +243,6 @@ def rebase_at_x(df, at=100):
     else:
         df = df.apply(lambda x: x / x.dropna().values.tolist()[0] * at)
     return df
-
-
-def rebase_at_xs(ri, at):
-    """
-    :param ri: pd.DataFrame; prices of the instruments
-    :param at: pd.DataFrame; df that has rebalancing dates as columns and instrument codes as index
-    """
-    multiple_dts = at.columns
-    df_dict = {}
-    ri_reb = ri.copy()
-    ri_reb = ri_reb.reindex(at.index.get_level_values(0).tolist(), axis=1)
-    ri_reb = fillna_downbet(ri_reb)
-
-    for i in np.arange(len(multiple_dts)):
-
-        if i == 0:
-            df = ri_reb.loc[:multiple_dts[i + 1], :].iloc[1:, :].dropna(how='all', axis=1)
-        elif i + 1 == len(multiple_dts):
-            df = ri_reb.loc[multiple_dts[i]:, :].iloc[1:, :].dropna(how='all', axis=1)
-        else:
-            df = ri_reb.loc[multiple_dts[i]:multiple_dts[i + 1], :].iloc[1:, :].dropna(how='all', axis=1)
-
-        df_dict[i] = df.apply(lambda x: x / x.dropna().values.tolist()[0] * at.loc[x.name, multiple_dts[i]])
-
-    df_to_go = pd.concat(df_dict)
-    df_to_go.index = df_to_go.index.droplevel()
-    return df_to_go
 
 
 class Stats:
@@ -363,10 +297,12 @@ class Stats:
         """
 
         freq = pd.infer_freq(s.index)
-        if freq == 'B':  # business day frequency
+        if freq == 'B' or freq is None:  # business day frequency
             ann_coeff = 252
         elif freq == 'D':  # calendar day frequency
             ann_coeff = 365
+        elif freq == 'BMS':  # start of month business day
+            ann_coeff = 12
         else:
             raise KeyError('Specifiy valid frequency!')
 
@@ -391,10 +327,12 @@ class Stats:
 
         stats_dict['Total Return'] = self.ts.apply(lambda x: self.compute_return(s=x, annualized=False))
         stats_dict['Average Annualized Return'] = self.ts.apply(lambda x: self.compute_return(s=x, annualized=True))
-        stats_dict['Daily Arithmetic Average Return'] = self.arithmetic_average_ret()
+        stats_dict['Arithmetic Average Return'] = self.arithmetic_average_ret()
 
-        stats_dict['Daily Std. Deviation'] = self.rets.apply(lambda x: self.compute_st_dev(s=x, annualized=False))
+        stats_dict['Std. Deviation'] = self.rets.apply(lambda x: self.compute_st_dev(s=x, annualized=False))
         stats_dict['Annualized Std. Deviation'] = self.rets.apply(lambda x: self.compute_st_dev(s=x, annualized=True))
+
+        stats_dict['Sharpe Ratio'] = stats_dict['Average Annualized Return'] / stats_dict['Annualized Std. Deviation']
 
         dd_data = self.max_dd()
         stats_dict['Maximum Drawdown'] = dd_data.max_dd
