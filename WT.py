@@ -10,7 +10,7 @@ from WT_functions import get_and_tidy_up_data
 from WT_functions import plot_future_curve_and_roll_yield
 from WT_functions import single_commodity_optimal_contract
 
-part_one = True
+part_one = False
 part_two = True
 plot_stuff = True
 
@@ -93,8 +93,7 @@ if part_two:
         price_df_single = price_df.loc[:, cd]
         weights_single = weights.loc[:, cd]
         strategy_class, strategy_ts = backtest_strategy(prices=price_df_single,
-                                                        w=weights_single,
-                                                        rebalancing='daily')
+                                                        w=weights_single)
 
         if plot_stuff and cd == 'NG':
             fig = strategy_class.plot_weights(return_fig=True)
@@ -109,6 +108,14 @@ if part_two:
     ptf_ts = rebase_at_x((resampled_full_comm.pct_change().mean(axis=1).fillna(0) + 1).cumprod())  # compute ptf ts
     ptf_ts.name = 'strategy'
 
+    #################################
+    print('Backtest Full Strategy 2')
+    full_comm_df = pd.concat(ts_dict, axis=1)
+    full_comm_w = pd.DataFrame(1, full_comm_df.index, full_comm_df.columns).resample('BMS').first()
+    full_comm_w = full_comm_w.div(full_comm_w.sum(axis=1), axis=0)
+    ptf_class, ptf_ts2 = backtest_strategy(prices=full_comm_df, w=full_comm_w, all_comm=True)
+    ts_dict['portfolio'] = ptf_ts2
+
     # Send to excel
     full_comm_df.to_excel('backtest_levels_single_commodities.xlsx')
     ptf_ts.to_excel('backtest_levels_strategy.xlsx')
@@ -120,11 +127,13 @@ else:
 # plot strategy
 fig = plt.figure(figsize=(12, 8))
 ax = fig.add_subplot(1, 1, 1)
-ptf_ts.plot(color='black', ax=ax, legend='strategy', linewidth=2)
+# ptf_ts.plot(color='black', ax=ax, legend='strategy', linewidth=2)
+ptf_ts2.plot(color='black', ax=ax, legend='strategy', linewidth=2)
 full_comm_df.rename(names_mapping, axis=1).plot(cmap='brg', ax=ax, alpha=0.5, linewidth=1)
 ax.set_title('Portfolio vs. Single Commodities', fontsize=20)
 plt.savefig('backtest_levels.png', transparent=True)
-
+plt.show()
+quit()
 # Stats computation for the Strategy and export
 stats = Stats(ptf_ts.to_frame().pct_change())
 summary_stats = stats.summary_stats()

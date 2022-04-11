@@ -98,13 +98,22 @@ def backtest_strategy(prices, w, all_comm=False):
 
         weights_at_reb_dt = w.resample('BMS').first().fillna(0).reindex(prices.index).ffill().bfill()
         idx_cls = IndexConstruction(prices,
-                                    weights_at_reb_dt.T,
-                                    name='strategy',
-                                    shift_periods=0)
+                                        weights_at_reb_dt.T,
+                                        name='strategy',
+                                        shift_periods=0)
         idx_cls.get_index()
 
     else:
-        raise KeyError('Rebalancing string not valid!')
+        idx_cls = IndexConstruction(prices,
+                                    w.T,
+                                    name='strategy',
+                                    shift_periods=0,
+                                    rebalancing='monthly')
+        idx_cls.get_index()
+
+
+    # else:
+    #     raise KeyError('Rebalancing string not valid!')
 
     return idx_cls, idx_cls.idx
 
@@ -171,7 +180,7 @@ def plot_future_curve_and_roll_yield(commodity_at_dt, return_fig=False):
 
 class IndexConstruction:
 
-    def __init__(self, ris, w, name='idx', rescale_w=True, shift_periods=1):
+    def __init__(self, ris, w, name='idx', rescale_w=True, shift_periods=1, rebalancing='daily'):
 
         """
         Index Construction
@@ -185,7 +194,7 @@ class IndexConstruction:
         self.name = name
         self.rescale_w = rescale_w
         self.shift_periods = shift_periods
-
+        self.rebalancing = rebalancing
         self.rets = ris.pct_change()
 
         self.idx = None
@@ -201,8 +210,10 @@ class IndexConstruction:
         self.idx.name = self.name
 
     def get_weights(self):
-
-        w_df_raw = self.w.T.fillna(0).reindex(self.ris.index).ffill().bfill().shift(self.shift_periods)
+        if self.rebalancing =='daily':
+            w_df_raw = self.w.T.fillna(0).reindex(self.ris.index).ffill().bfill().shift(self.shift_periods)
+        else:
+            w_df_raw = self.rebase_at_xs(self.ris.truncate(before=self.w.columns[0]), self.w)
 
         if self.rescale_w:
             self.w_df = w_df_raw.div(w_df_raw.sum(axis=1), axis=0)
@@ -234,6 +245,40 @@ class IndexConstruction:
             return fig
         else:
             plt.show()
+
+    @staticmethod
+    def rebase_at_xs(ri, at):
+        """
+        :param ri: pd.DataFrame;
+        :param at: pd.DataFrame; df that has rebalancing dates as columns and instrument ids as index
+        """
+        multiple_dts = at.columns
+        df_dict = {}
+        ri_reb = ri.copy()
+        ri_reb = ri_reb.reindex(at.index.get_level_values(0).tolist(), axis=1)
+        ri_reb.loc[:, ri_reb.isna().all()] = 100
+
+        for i in np.arange(len(multiple_dts)):
+            at_dt = at.loc[:, multiple_dts[i]]
+            if len(at.index.names) == 2 and 'daily' in at_dt.index.get_level_values(1).tolist():
+                to_rescale = at_dt.xs('daily', level=1)
+                w_to_rescale = to_rescale.sum()
+
+            if i == 0:
+                df = ri_reb.loc[:multiple_dts[i + 1], :].dropna(how='all', axis=1)
+            elif i + 1 == len(multiple_dts):
+                df = ri_reb.loc[multiple_dts[i]:, :].dropna(how='all', axis=1)
+            else:
+                df = ri_reb.loc[multiple_dts[i]:multiple_dts[i + 1], :].dropna(how='all', axis=1)
+
+
+            df_dict[i] = df.shift().iloc[1:, :].apply(
+                    lambda x: x / x.dropna().values.tolist()[0] * at.loc[x.name, multiple_dts[i]])
+
+
+        df_to_go = pd.concat(df_dict)
+        df_to_go.index = df_to_go.index.droplevel()
+        return df_to_go
 
 
 def rebase_at_x(df, at=100):
