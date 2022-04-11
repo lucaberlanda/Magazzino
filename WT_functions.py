@@ -84,11 +84,11 @@ def single_commodity_optimal_contract(df, volume_threshold=3e7, oi_threshold=1e8
     return df, chosen_contracts, price_df_comm, w_df
 
 
-def backtest_strategy(prices, w, all_comm=False):
+def backtest_strategy(prices, w, single_commodity=True):
     w = w.copy()
     prices = prices.copy()
 
-    if not all_comm:
+    if single_commodity:
         w.columns = w.columns.droplevel(0)
         prices.columns = prices.columns.droplevel(0)
 
@@ -98,9 +98,10 @@ def backtest_strategy(prices, w, all_comm=False):
 
         weights_at_reb_dt = w.resample('BMS').first().fillna(0).reindex(prices.index).ffill().bfill()
         idx_cls = IndexConstruction(prices,
-                                        weights_at_reb_dt.T,
-                                        name='strategy',
-                                        shift_periods=0)
+                                    weights_at_reb_dt.T,
+                                    name='strategy',
+                                    rebalancing='daily',
+                                    shift_periods=0)
         idx_cls.get_index()
 
     else:
@@ -111,15 +112,10 @@ def backtest_strategy(prices, w, all_comm=False):
                                     rebalancing='monthly')
         idx_cls.get_index()
 
-
-    # else:
-    #     raise KeyError('Rebalancing string not valid!')
-
     return idx_cls, idx_cls.idx
 
 
 def plot_contract(what, df, code, m, y, names_dict, return_fig=False):
-
     """
     :param what: str; quantity to plot
     :param df: pd.DataFrame;
@@ -210,7 +206,7 @@ class IndexConstruction:
         self.idx.name = self.name
 
     def get_weights(self):
-        if self.rebalancing =='daily':
+        if self.rebalancing == 'daily':
             w_df_raw = self.w.T.fillna(0).reindex(self.ris.index).ffill().bfill().shift(self.shift_periods)
         else:
             w_df_raw = self.rebase_at_xs(self.ris.truncate(before=self.w.columns[0]), self.w)
@@ -259,11 +255,6 @@ class IndexConstruction:
         ri_reb.loc[:, ri_reb.isna().all()] = 100
 
         for i in np.arange(len(multiple_dts)):
-            at_dt = at.loc[:, multiple_dts[i]]
-            if len(at.index.names) == 2 and 'daily' in at_dt.index.get_level_values(1).tolist():
-                to_rescale = at_dt.xs('daily', level=1)
-                w_to_rescale = to_rescale.sum()
-
             if i == 0:
                 df = ri_reb.loc[:multiple_dts[i + 1], :].dropna(how='all', axis=1)
             elif i + 1 == len(multiple_dts):
@@ -271,10 +262,8 @@ class IndexConstruction:
             else:
                 df = ri_reb.loc[multiple_dts[i]:multiple_dts[i + 1], :].dropna(how='all', axis=1)
 
-
             df_dict[i] = df.shift().iloc[1:, :].apply(
-                    lambda x: x / x.dropna().values.tolist()[0] * at.loc[x.name, multiple_dts[i]])
-
+                lambda x: x / x.dropna().values.tolist()[0] * at.loc[x.name, multiple_dts[i]])
 
         df_to_go = pd.concat(df_dict)
         df_to_go.index = df_to_go.index.droplevel()

@@ -1,16 +1,14 @@
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from WT_functions import Stats
-from WT_functions import rebase_at_x
 from WT_functions import plot_contract
 from WT_functions import backtest_strategy
 from WT_functions import get_and_tidy_up_data
 from WT_functions import plot_future_curve_and_roll_yield
 from WT_functions import single_commodity_optimal_contract
 
-part_one = False
+part_one = True
 part_two = True
 plot_stuff = True
 
@@ -46,6 +44,7 @@ if part_one:
         if cd == 'NG' and plot_stuff:
             fig4 = plot_future_curve_and_roll_yield(contracts_df_single.loc[pd.to_datetime('2020-04-30')],
                                                     return_fig=True)
+
             plt.savefig('curve_and_roll_yield.png', transparent=True)
 
         weights_dict[cd] = weights_single
@@ -104,17 +103,18 @@ if part_two:
 
     print('Backtest Full Strategy')
     full_comm_df = pd.concat(ts_dict, axis=1)
-    resampled_full_comm = full_comm_df.resample('BMS').first()
-    ptf_ts = rebase_at_x((resampled_full_comm.pct_change().mean(axis=1).fillna(0) + 1).cumprod())  # compute ptf ts
-    ptf_ts.name = 'strategy'
+    eq_w = 1 / len(full_comm_df.columns)  # all commodities are equally weighted
+    all_comm_w = pd.DataFrame(eq_w, full_comm_df.index, full_comm_df.columns).resample('BMS').first()
+    ptf_class, ptf_ts = backtest_strategy(prices=full_comm_df, w=all_comm_w, single_commodity=False)
+    ts_dict['portfolio'] = ptf_ts
 
-    #################################
-    print('Backtest Full Strategy 2')
-    full_comm_df = pd.concat(ts_dict, axis=1)
-    full_comm_w = pd.DataFrame(1, full_comm_df.index, full_comm_df.columns).resample('BMS').first()
-    full_comm_w = full_comm_w.div(full_comm_w.sum(axis=1), axis=0)
-    ptf_class, ptf_ts2 = backtest_strategy(prices=full_comm_df, w=full_comm_w, all_comm=True)
-    ts_dict['portfolio'] = ptf_ts2
+    if plot_stuff:
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(1, 1, 1)
+        ptf_class.w_df.max(axis=1).iloc[:1000].plot(ax=ax, color='black')
+        ax.set_title('Maximum Weight Evolution', fontsize=15)
+        plt.savefig('maximum_weight_evolution.png', transparent=True)
+        plt.close()
 
     # Send to excel
     full_comm_df.to_excel('backtest_levels_single_commodities.xlsx')
@@ -125,15 +125,18 @@ else:
     ptf_ts = pd.read_excel('backtest_levels_strategy.xlsx').set_index('date')
 
 # plot strategy
-fig = plt.figure(figsize=(12, 8))
-ax = fig.add_subplot(1, 1, 1)
-# ptf_ts.plot(color='black', ax=ax, legend='strategy', linewidth=2)
-ptf_ts2.plot(color='black', ax=ax, legend='strategy', linewidth=2)
+fig = plt.figure(figsize=(18, 7))
+ax = fig.add_subplot(1, 2, 1)
+ax2 = fig.add_subplot(1, 2, 2)
+ptf_ts.plot(color='black', ax=ax, legend='strategy', linewidth=2)
+ptf_ts.plot(color='black', ax=ax2, legend='strategy', linewidth=2)
 full_comm_df.rename(names_mapping, axis=1).plot(cmap='brg', ax=ax, alpha=0.5, linewidth=1)
-ax.set_title('Portfolio vs. Single Commodities', fontsize=20)
+ax.set_title('Strategy vs. Single Commodities', fontsize=15)
+ax2.set_title('Strategy', fontsize=15)
+plt.tight_layout()
 plt.savefig('backtest_levels.png', transparent=True)
-plt.show()
-quit()
+plt.close()
+
 # Stats computation for the Strategy and export
 stats = Stats(ptf_ts.to_frame().pct_change())
 summary_stats = stats.summary_stats()
@@ -143,4 +146,4 @@ summary_stats.to_excel('strategy_stats.xlsx')
 stats_comm = Stats(full_comm_df.pct_change())
 summary_stats_comm = stats_comm.summary_stats()
 summary_stats_comm = summary_stats_comm.rename(names_mapping, axis=1).T
-summary_stats_comm.to_excel('commodities_stats.xlsx')
+summary_stats_comm.to_excel('single_commodities_stats.xlsx')
