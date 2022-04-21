@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
+def distributions(f, **kwargs):
+    return f(**kwargs)
+
+
 def rebase_at_x(df, at=100):
     if type(df) == pd.Series:
         df = df.dropna()
