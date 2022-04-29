@@ -6,6 +6,31 @@ import matplotlib.pyplot as plt
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
+def distributions(f, **kwargs):
+    return f(**kwargs)
+
+
+def r_squared_distribution(f, X_params, y_params):
+    """
+
+    :param f:
+    :param X_params:
+    :param y_params:
+    :return:
+    """
+
+    # todo just one set of params, then y is inferred from y
+
+    r_squared_dict = {}
+    for i in np.arange(0, 10000, 1):
+        df = pd.DataFrame(distributions(f, **X_params))
+        s = pd.Series(distributions(f, **y_params))
+        result = OLS(endog=s, exog=df).fit()
+        r_squared_dict[i] = result.rsquared
+
+    return pd.Series(r_squared_dict)
+
+
 def rebase_at_x(df, at=100):
     if type(df) == pd.Series:
         df = df.dropna()
