@@ -5,16 +5,18 @@ Complexity Theory and Finance.
 
 ## <span style='font-family:Inter'> Statistics And Probability </span>
 
+### <span style='font-family:Inter'> Notes </span>
+
+- [Probability Axioms And Counting Notes](Notes/StatsAndProbability/ProbabilityAxiomsAndCounting.ipynb)
+- [Data Analysis Notes](Notes/StatsAndProbability/DataAnalysisNotes.ipynb)
+- [Statistics Notes](Notes/StatsAndProbability/StatisticsNotes.ipynb)
+- [Distributions Notes](Notes/StatsAndProbability/Distributions.ipynb)
+
 ### <span style='font-family:Inter'> Generic </span>
 
-- [Data Analysis Notes](Notes/StatsAndProbability/DataAnalysisNotes.ipynb)
-- [Data Analysis Notes II](Notes/StatsAndProbability/DataAnalysisNotes2.ipynb)
-- [Probability Axioms And Counting](Notes/StatsAndProbability/ProbabilityAxiomsAndCounting.ipynb)
-- [Statistics Notes](Notes/StatsAndProbability/StatisticsNotes.ipynb)
 - [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb)
 - [Correlation](Notes/StatsAndProbability/Correlation.ipynb)
-- [Distributions](Notes/StatsAndProbability/Distributions.ipynb)
-- [Geometric Vs ArithmeticMean](Notes/StatsAndProbability/GeometricVsArithmeticMean.ipynb)
+- [Geometric Vs Arithmetic Average](Notes/StatsAndProbability/GeometricVsArithmeticMean.ipynb)
 - [Geometric Average](Notes/StatsAndProbability/GeometricAverage.ipynb)
 - [Log and Semi Log Plot](Notes/StatsAndProbability/LogSemiLogPlot.ipynb)
 - [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb)
