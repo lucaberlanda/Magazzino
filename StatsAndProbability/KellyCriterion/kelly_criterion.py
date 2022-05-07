@@ -49,9 +49,8 @@ class KellyCriterion:
             ax2.axvline(self.optimal_f, color='b', linestyle='--', lw=1)
             ax1.set_title('Wealth Evolution')
             ax2.set_title('Wealth at time T - Theoretical Optimal: ' + str(round(self.optimal_f, 2)))
-            plt.show()
 
-        return W
+        return W, fig
 
     @staticmethod
     def W_evolution(bet_percentage, draws):
