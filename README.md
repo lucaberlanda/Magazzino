@@ -22,7 +22,7 @@ Complexity Theory and Finance.
 
 ### <span style='font-family:Inter'> Kelly Criterion </span>
 
-- [KellyCriterion](Notes/StatsAndProbability/KellyCriterion/Kelly.ipynb)
+- [Kelly Criterion](Notes/StatsAndProbability/KellyCriterion/Kelly.ipynb)
 
 ### <span style='font-family:Inter'> Tails & Extreme Value Theory </span>
 
