@@ -12,7 +12,6 @@ Complexity Theory and Finance.
 - [Probability Axioms And Counting](Notes/StatsAndProbability/ProbabilityAxiomsAndCounting.ipynb)
 - [StatisticsNotes](Notes/StatsAndProbability/StatisticsNotes.ipynb)
 - [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb)
-- [Beta Distribution](Notes/StatsAndProbability/BetaDistribution.ipynb)
 - [Correlation](Notes/StatsAndProbability/Correlation.ipynb)
 - [Distributions](Notes/StatsAndProbability/Distributions.ipynb)
 - [GeometricVsArithmeticMean](Notes/StatsAndProbability/GeometricVsArithmeticMean.ipynb)
