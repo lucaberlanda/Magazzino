@@ -1,0 +1,3 @@
+[submodule "Omnia"]
+	path = Omnia
+	url = https://github.com/lucaberlanda/Omnia.git
