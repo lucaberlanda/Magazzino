@@ -33,7 +33,7 @@ Complexity Theory and Finance.
 
 ## <span style='font-family:Inter'> Finance </span>
 
-- [Bond Convexity](Notes/Finance/bond_convexity.ipynb)
+- [Bond Duration and Convexity](Notes/Finance/bond_duration_convexity.ipynb)
 - [Geometric Brownian Motion](Notes/Finance/GeometricBrownianMotion.ipynb)
 - [Hurst Exponent](Notes/Finance/Hurst.ipynb)
 - [Index Deep Dive](Notes/Finance/IndexDeepDive.ipynb)
