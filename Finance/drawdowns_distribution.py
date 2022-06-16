@@ -5,18 +5,6 @@ import matplotlib.pyplot as plt
 from primitive import get_sp500
 
 
-def get_n_colors(palette='brg', n=3):
-    import matplotlib
-    from pylab import cm
-    cmap = cm.get_cmap(palette, n)  # PiYG
-    colors_list = []
-    for i in range(cmap.N):
-        rgba = cmap(i)
-        colors_list.append(matplotlib.colors.rgb2hex(rgba))  # rgb2hex accepts rgb or rgba
-
-    return colors_list
-
-
 def plot_drawdown(dist):
     """
     log of the minimum of S over a window of n days following a given S.
@@ -83,44 +71,25 @@ def plot_drawdown(dist):
     plt.show()
 
 
-def plot_drawdown_by_window(ris, n_list: list, threshold=0.02):
+def plot_drawdown_by_window(ris, windows: list, threshold=0.02):
     """
     log of the minimum of S over a window of n days following a given S.
-    :param dist:
+    :param ris:
+    :param windows:
+    :param threshold:
     :return:
     """
 
     dds_by_n = {}
-    for n in n_list:
-        dds = {}
-        for _, df in ris.groupby(np.arange(len(ris)) // n):
-            dds[df.index[-1]] = np.log(df.div(df.iloc[0])).min()
+    for n in windows:
+        from Omnia.stats import Stats
+        dds = Stats(ris).max_dd(rolling=True, window=n, min_p=n, logs=True)[1].iloc[::n].dropna()
+        dds_by_n[n] = dds.iloc[:, 0]
 
-        dds_by_n[n] = pd.Series(dds)
-
-    c_list = get_n_colors(n=len(dds_by_n.keys()))
-    for cnt, k in enumerate(dds_by_n.keys()):
-        s = dds_by_n[k]
-        to_plot = abs(s.dropna()).sort_values(ascending=False).reset_index().iloc[:, 1].reset_index()
-        to_plot.columns = ['p_>_mod_x', 'daily_return']
-        to_plot.loc[:, 'p_>_mod_x'] = (to_plot.loc[:, 'p_>_mod_x'] + 1) / (len(to_plot.index) + 1)
-        to_plot = to_plot[to_plot.daily_return > threshold]
-        from Viz.charting import generate_ax
-        ax = generate_ax('Drawdowns by Window (non overlapping)', '$x$', 'Probability of being > $|x|$')
-        ax.plot(to_plot['daily_return'],
-                to_plot['p_>_mod_x'],
-                'o',
-                c=c_list[cnt],
-                alpha=0.5,
-                markeredgecolor='none')
-
-    ax.legend(n_list)
-    ax.set_yscale('log')
-    ax.set_xscale('log')
-    plt.tight_layout()
-    plt.show()
+    from Viz.functions import log_log_plot_with_threshold
+    log_log_plot_with_threshold(dds_by_n, threshold=threshold, title='Drawdowns by Window (non overlapping)')
 
 
 if __name__ == '__main__':
-    ris = get_sp500()
-    plot_drawdown_by_window(ris, n_list=[5, 50])
+    ret_idx = get_sp500()
+    plot_drawdown_by_window(ret_idx, windows=[5, 100, 252])
