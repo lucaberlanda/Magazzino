@@ -3,7 +3,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import yfinance as yf
+
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def get_sp500():
+    price = yf.download('^GSPC', progress=False).Close
+    return price
 
 
 def distributions(f, **kwargs):

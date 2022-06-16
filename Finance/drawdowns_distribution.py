@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from primitive import get_sp500
+
 
 def get_n_colors(palette='brg', n=3):
     import matplotlib
@@ -117,3 +119,8 @@ def plot_drawdown_by_window(ris, n_list: list, threshold=0.02):
     ax.set_xscale('log')
     plt.tight_layout()
     plt.show()
+
+
+if __name__ == '__main__':
+    ris = get_sp500()
+    plot_drawdown_by_window(ris, n_list=[5, 50])
