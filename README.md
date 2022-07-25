@@ -14,7 +14,7 @@ Complexity Theory and Finance.
 
 ### <span style='font-family:Inter'> Generic </span>
 
-- [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb)
+- [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb) :white_check_mark:
 - [Correlation](Notes/StatsAndProbability/Correlation.ipynb)
 - [Geometric Vs Arithmetic Average](Notes/StatsAndProbability/GeometricVsArithmeticMean.ipynb)
 - [Geometric Average](Notes/StatsAndProbability/GeometricAverage.ipynb)
