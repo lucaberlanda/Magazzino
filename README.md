@@ -7,7 +7,7 @@ Complexity Theory and Finance.
 
 ### <span style='font-family:Inter'> Notes </span>
 
-- [Probability Axioms And Counting Notes](Notes/StatsAndProbability/ProbabilityAxiomsAndCounting.ipynb)
+- [Probability Axioms And Counting Notes](Notes/StatsAndProbability/ProbabilityAxiomsAndCounting.ipynb) :white_check_mark:
 - [Data Analysis Notes](Notes/StatsAndProbability/DataAnalysisNotes.ipynb)
 - [Statistics Notes](Notes/StatsAndProbability/StatisticsNotes.ipynb)
 - [Distributions Notes](Notes/StatsAndProbability/Distributions.ipynb)
@@ -16,8 +16,7 @@ Complexity Theory and Finance.
 
 - [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb) :white_check_mark:
 - [Correlation](Notes/StatsAndProbability/Correlation.ipynb)
-- [Geometric Vs Arithmetic Average](Notes/StatsAndProbability/GeometricVsArithmeticMean.ipynb)
-- [Geometric Average](Notes/StatsAndProbability/GeometricAverage.ipynb)
+- [Geometric Average](Notes/StatsAndProbability/GeometricAverage.ipynb) :white_check_mark:
 - [Log and Semi Log Plot](Notes/StatsAndProbability/LogSemiLogPlot.ipynb)
 - [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb)
 - [Simulated Beta](Notes/SimulatedBeta.ipynb)
