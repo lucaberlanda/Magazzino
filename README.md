@@ -38,7 +38,7 @@ Complexity Theory and Finance.
 - [Risk Budgeting](Notes/Finance/RiskBudgeting.ipynb)
 - [Signals](Notes/Finance/Signals.ipynb)
 - [Strategies](Notes/Finance/Strategies.ipynb)
-- [Blockchain & Cryptos](Notes/Blockchain/Blockchain Notes.ipynb)
+- [Blockchain and Cryptos](Notes/Blockchain/Blockchain Notes.ipynb)
 
 ## <span style='font-family:Inter'> Machine Learning </span>
 
