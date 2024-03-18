@@ -1,39 +1,46 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.stats import norm, t
 
-from scipy.stats import norm
-
+from scipy.stats import ttest_1samp
 """
 Replication of "A Short Note on P-Value Hacking"
 https://arxiv.org/pdf/1603.07532.pdf
 """
 
-sample_size = 5
+sample_size = 15
 significance_level = 0.05
 std_dev = 1
 mean_1 = 0
-mean_2 = 0.55
-simulations = 100000
+mean_2 = 0.35
+simulations = 10000
 
 true_tstat = (mean_2 - mean_1) / (std_dev / np.sqrt(sample_size))
-true_p_value = 1 - norm.cdf(true_tstat)
+true_p_value = 1 - t.cdf(true_tstat, df=sample_size-1)
 print('True p-value:', true_p_value)
+print('True t-statistic:', true_tstat)
 
-p_values_dicts = {}
+p_values_dict = {}
+t_stat_dict = {}
 for i in range(simulations):
     realized = np.random.normal(loc=mean_2, scale=std_dev, size=sample_size)
     mean_2_realized = realized.mean()
     std_2_realized = realized.std()
-    real_p_value = (mean_2_realized - mean_1) / (std_dev / np.sqrt(sample_size))
-    p_values_dicts[i] = real_p_value
+    ttest = ttest_1samp(realized, popmean=mean_1)
 
-pd.Series(p_values_dicts).plot(kind='hist', bins=100)
+    real_t_statistic = ttest.statistic
+    pvalue = ttest.pvalue
+
+    t_stat_dict[i] = real_t_statistic
+    p_values_dict[i] = pvalue
+
+pd.Series(t_stat_dict).plot(kind='hist', bins=100, color='black')
 plt.show()
 
-obs_p_values = pd.Series(1 - norm.cdf(pd.Series(p_values_dicts)))
+obs_p_values = pd.Series(p_values_dict)
 obs_p_values.plot(kind='hist', bins=100)
-obs_p_values_lower_real = np.float(len(obs_p_values[obs_p_values < (1 - norm.cdf(real_p_value))])) / len(obs_p_values)
+obs_p_values_lower_real = np.float(len(obs_p_values[obs_p_values < true_p_value])) / len(obs_p_values)
 portion = len(obs_p_values[obs_p_values < true_p_value]) / simulations
 plt.show()
 

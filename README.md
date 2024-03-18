@@ -18,7 +18,6 @@ Complexity Theory and Finance.
 - [Correlation](Notes/StatsAndProbability/Correlation.ipynb)
 - [Geometric Average](Notes/StatsAndProbability/GeometricAverage.ipynb) :white_check_mark:
 - [Log and Semi Log Plot](Notes/StatsAndProbability/LogSemiLogPlot.ipynb)
-- [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb)
 - [Simulated Beta](Notes/SimulatedBeta.ipynb)
 
 ### <span style='font-family:Inter'> Kelly Criterion </span>
@@ -39,6 +38,7 @@ Complexity Theory and Finance.
 - [Risk Budgeting](Notes/Finance/RiskBudgeting.ipynb)
 - [Signals](Notes/Finance/Signals.ipynb)
 - [Strategies](Notes/Finance/Strategies.ipynb)
+- [Blockchain & Cryptos](Notes/Blockchain/Blockchain Notes.ipynb)
 
 ## <span style='font-family:Inter'> Machine Learning </span>
 
