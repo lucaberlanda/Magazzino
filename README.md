@@ -38,7 +38,7 @@ Complexity Theory and Finance.
 - [Risk Budgeting](Notes/Finance/RiskBudgeting.ipynb)
 - [Signals](Notes/Finance/Signals.ipynb)
 - [Strategies](Notes/Finance/Strategies.ipynb)
-- [Blockchain and Cryptos](Notes/Blockchain/Blockchain Notes.ipynb)
+- [Blockchain and Cryptos](Notes/Blockchain/BlockchainNotes.ipynb)
 
 ## <span style='font-family:Inter'> Machine Learning </span>
 
@@ -46,7 +46,7 @@ Complexity Theory and Finance.
 - [Machine Learning Theoretical Notes](Notes/MachineLearning/MachineLearningNotesTheory.ipynb)
 - [Bayesian Optimization](Notes/MachineLearning/BayesianOptimization.ipynb)
 - [Generative Models](Notes/MachineLearning/GenerativeModels.ipynb)
-- [Markov Chains](Notes/MachineLearning/MarkovChains.ipynb)
+- [Markov Chains](Notes/MachineLearning/MarkovChains.ipynb) :wrench:
 
 ## <span style='font-family:Inter'> Economics </span>
 
