@@ -7,14 +7,16 @@ Complexity Theory and Finance.
 
 ### <span style='font-family:Inter'> Notes </span>
 
-- [Probability Axioms And Counting Notes](Notes/StatsAndProbability/ProbabilityAxiomsAndCounting.ipynb) :white_check_mark:
+- [Probability Axioms And Counting Notes](Notes/StatsAndProbability/ProbabilityAxiomsAndCounting.ipynb) :
+  white_check_mark:
 - [Data Analysis Notes](Notes/StatsAndProbability/DataAnalysisNotes.ipynb)
 - [Statistics Notes](Notes/StatsAndProbability/StatisticsNotes.ipynb)
 - [Distributions Notes](Notes/StatsAndProbability/Distributions.ipynb)
 
 ### <span style='font-family:Inter'> Generic </span>
 
-- [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb) :white_check_mark:
+- [Regression Coefficients Distribution](Notes/StatsAndProbability/RegressionCoefficientsDistribution.ipynb) :
+  white_check_mark:
 - [Correlation](Notes/StatsAndProbability/Correlation.ipynb)
 - [Geometric Average](Notes/StatsAndProbability/GeometricAverage.ipynb) :white_check_mark:
 - [Log and Semi Log Plot](Notes/StatsAndProbability/LogSemiLogPlot.ipynb)
@@ -27,7 +29,7 @@ Complexity Theory and Finance.
 ### <span style='font-family:Inter'> Tails & Extreme Value Theory </span>
 
 - [Tails](Notes/StatsAndProbability/Tails/FatTailsNotes.ipynb)
-- [EVT](Notes/StatsAndProbability/EVT/EVT.ipynb)
+- [EVT](Notes/StatsAndProbability/EVT/EVT.ipynb) :wrench:
 
 ## <span style='font-family:Inter'> Finance </span>
 
@@ -36,7 +38,8 @@ Complexity Theory and Finance.
 - [Hurst Exponent](Notes/Finance/Hurst.ipynb)
 - [Index Deep Dive](Notes/Finance/IndexDeepDive.ipynb)
 - [Risk Budgeting](Notes/Finance/RiskBudgeting.ipynb)
-- [Signals](Notes/Finance/Signals.ipynb)
+- [Mean-Variance Error Maximization](---) :wrench:
+- [Signals](Notes/Finance/Signals.ipynb) :wrench:
 - [Strategies](Notes/Finance/Strategies.ipynb)
 - [Blockchain and Cryptos](Notes/Blockchain/BlockchainNotes.ipynb)
 
@@ -50,5 +53,5 @@ Complexity Theory and Finance.
 
 ## <span style='font-family:Inter'> Economics </span>
 
-- [Ergodicity](Notes/Economics/Ergodicity.ipynb)
+- [Ergodicity](Notes/Economics/Ergodicity.ipynb) :wrench:
 
